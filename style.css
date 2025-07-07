@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #9fb9e3 0%, #5c91e6 100%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -21,7 +21,7 @@ body {
 }
 
 .header {
-    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    background: linear-gradient(135deg, #4a90e2 0%, #0a224b 100%);
     color: white;
     padding: 30px;
     text-align: center;
@@ -76,7 +76,7 @@ select:focus, input:focus {
 }
 
 .btn {
-    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    background: linear-gradient(135deg, #0a224b 0%, #0a224b 100%);
     color: white;
     padding: 15px 30px;
     border: none;

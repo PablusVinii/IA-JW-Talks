@@ -29,6 +29,14 @@ async function gerarEsboco() {
         mostrarAlerta('Por favor, selecione o tipo de discurso!');
         return;
     }
+    if (!tema) {
+        mostrarAlerta('Por favor, insira o tema do discurso!');
+        return;
+    }
+    if (tipoDiscurso === 'publico') {
+        mostrarAlerta('Ferramenta disponivel em breve. Por favor, escolha outro tipo de discurso.');
+        return;
+    }
 
     mostrarCarregamento(true);
     esconderElementos();
@@ -140,7 +148,7 @@ document.getElementById('esbocoConteudo').innerHTML = formatarNegrito(conteudoBr
 function obterTextoTipo(tipo) {
     const tipos = {
         'tesouros': 'Tesouros da Palavra de Deus',
-        'publico': 'Discurso Público'
+        //'publico': 'Discurso Público'
     };
     return tipos[tipo] || 'Tipo não especificado';
 }
