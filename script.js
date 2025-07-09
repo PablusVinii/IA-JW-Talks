@@ -7,6 +7,7 @@ const API_URL = 'http://localhost:5678/webhook-test/fd061969-eb2c-4355-89da-910e
 const elementos = {
     tipoDiscurso: document.getElementById('tipoDiscurso'),
     tema: document.getElementById('tema'),
+    tempo: document.getElementById('tempo'),
     informacoesAdicionais: document.getElementById('informacoesAdicionais'),
     versiculosOpicionais: document.getElementById('versiculosOpicionais'),
     topicosOpicionais: document.getElementById('topicosOpicionais'),
@@ -284,6 +285,7 @@ class GeradorEsboco {
     obterDadosFormulario() {
         return {
             tipoDiscurso: elementos.tipoDiscurso?.value || '',
+            tempo: elementos.tempo?.value?.trim() || '',
             tema: elementos.tema?.value?.trim() || '',
             informacoesAdicionais: elementos.informacoesAdicionais?.value?.trim() || '',
             versiculosOpicionais: elementos.versiculosOpicionais?.value?.trim() || '',
@@ -320,6 +322,7 @@ class GeradorEsboco {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 tipo_discurso: dados.tipoDiscurso,
+                tempo: dados.tempo,
                 tema: temaFormatado,
                 informacoes_adicionais: dados.informacoesAdicionais,
                 versiculos_opicionais: dados.versiculosOpicionais,
@@ -352,6 +355,7 @@ class GeradorEsboco {
             const docData = {
                 uid: this.usuarioAtual.uid,
                 tipoDiscurso: dadosFormulario.tipoDiscurso,
+                tempo: dadosFormulario.tempo,
                 tema: dadosFormulario.tema,
                 informacoesAdicionais: dadosFormulario.informacoesAdicionais || '',
                 versiculosOpicionais: dadosFormulario.versiculosOpicionais || '',
@@ -615,6 +619,7 @@ class GeradorEsboco {
     // Limpar formulário
     limparFormulario() {
         if (elementos.tipoDiscurso) elementos.tipoDiscurso.value = '';
+        if (elementos.tempo) elementos.tempo.value = '';
         if (elementos.tema) elementos.tema.value = '';
         if (elementos.informacoesAdicionais) elementos.informacoesAdicionais.value = '';
         if (elementos.versiculosOpicionais) elementos.versiculosOpicionais.value = '';
