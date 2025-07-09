@@ -110,16 +110,21 @@ select:focus, input:focus {
     display: none;
     text-align: center;
     padding: 20px;
+    /* Flexbox for centering spinner and text if needed */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #4a90e2;
+    border: 4px solid #f3f3f3; /* Light grey */
+    border-top: 4px solid #4a90e2; /* Blue */
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin: 0 auto 15px;
+    margin-bottom: 15px; /* Spacing between spinner and text */
 }
 
 @keyframes spin {
@@ -211,6 +216,49 @@ select:focus, input:focus {
     border-left: 4px solid #c62828;
     margin-top: 20px;
 }
+
+.conteudo-esboco {
+    white-space: pre-wrap;
+    font-family: inherit;
+    line-height: 1.6;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: left;
+}
+
+/* Notificações */
+.notificacao {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    color: white;
+    font-size: 0.95em;
+}
+
+.notificacao.show.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notificacao.info {
+    background-color: #4a90e2; /* Blue */
+}
+
+.notificacao.success {
+    background-color: #4CAF50; /* Green */
+}
+
+.notificacao.error {
+    background-color: #f44336; /* Red */
+}
+
 
 /* Responsividade */
 @media (max-width: 768px) {

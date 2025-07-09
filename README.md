@@ -6,12 +6,12 @@ Versão 1.1
 ## 🚀 Funcionalidades
 
 - ✅ Geração automática de esboços para "Tesouros da Palavra de Deus"
-- ✅ Geração automática de esboços para "Discursos Públicos"
+- ✅ Geração automática de esboços para "Discursos Públicos" (Interface indica "Em Breve" para esta e outras opções futuras)
 - ✅ Busca automática na biblioteca JW.org
 - ✅ Interface responsiva e moderna
 - ✅ Extração de pontos principais e referências bíblicas
 - ✅ Cópia rápida de referências
-- ✅ Exportação de resultados
+- ✅ Exportação de resultados (Formato Word aprimorado)
 
 ## 🛠️ Tecnologias Utilizadas
 
