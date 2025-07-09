@@ -5,113 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-    body {
-      background: linear-gradient(to right, #667eea, #764ba2);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .container {
-      background: white;
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      max-width: 400px;
-      width: 100%;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 1.5rem;
-      color: #333;
-    }
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 0.5rem;
-      font-size: 1rem;
-    }
-    button {
-      width: 100%;
-      padding: 0.75rem;
-      background-color: #5a67d8;
-      border: none;
-      color: white;
-      font-weight: bold;
-      font-size: 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #434190;
-    }
-    .msg {
-      margin-top: 1rem;
-      text-align: center;
-      font-weight: 600;
-    }
-  </style>
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="utils.css">
 </head>
 <body>
   <div class="container">
     <h2>Entrar</h2>
     <form id="form-login">
+      <label for="email" class="visually-hidden">Email</label>
       <input type="email" id="email" placeholder="Email" required />
+      <label for="senha" class="visually-hidden">Senha</label>
       <input type="password" id="senha" placeholder="Senha" required />
       <button type="submit">Entrar</button>
     </form>
-    <div class="msg" id="mensagem"></div>
-    <button type="button" onclick="window.location.href='cadastro.html'">Criar nova conta</button>
+    <div class="msg" id="mensagem" role="alert"></div>
+    <a href="cadastro.html" class="btn-link-style btn-secondary">Criar nova conta</a>
 
   </div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyD3VkepMFnqNckroCSjXot1AsWkFCcZr3Q",
-      authDomain: "ia-jw-44d10.firebaseapp.com",
-      projectId: "ia-jw-44d10",
-      storageBucket: "ia-jw-44d10.firebasestorage.app",
-      messagingSenderId: "336134615491",
-      appId: "1:336134615491:web:24154851afe41e4827cd76",
-      measurementId: "G-2Q96R643CK"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-
-    const form = document.getElementById("form-login");
-    const msg = document.getElementById("mensagem");
-
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const email = form.email.value;
-      const senha = form.senha.value;
-
-      try {
-        await auth.signInWithEmailAndPassword(email, senha);
-        msg.textContent = "Login bem-sucedido! Redirecionando...";
-        msg.style.color = "green";
-        setTimeout(() => {
-          window.location.href = "index.html";
-        }, 1500);
-      } catch (error) {
-        msg.textContent = "E-mail ou senha inválidos!";
-        msg.style.color = "red";
-      }
-    };
-  </script>
+  <script src="firebase-init.js"></script>
+  <script src="auth.js"></script>
 </body>
 </html>

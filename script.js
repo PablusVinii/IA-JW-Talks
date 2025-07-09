@@ -1,20 +1,6 @@
-// Configuração do Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyD3VkepMFnqNckroCSjXot1AsWkFCcZr3Q",
-    authDomain: "ia-jw-44d10.firebaseapp.com",
-    projectId: "ia-jw-44d10",
-    storageBucket: "ia-jw-44d10.firebasestorage.app",
-    messagingSenderId: "336134615491",
-    appId: "1:336134615491:web:24154851afe41e4827cd76",
-    measurementId: "G-2Q96R643CK"
-};
-
-// Inicializa Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
 // Configurações da API
+// Firebase auth e db são inicializados em firebase-init.js e estão disponíveis globalmente.
+// ATENÇÃO: Esta URL deve ser configurada para o ambiente de produção.
 const API_URL = 'http://localhost:5678/webhook-test/fd061969-eb2c-4355-89da-910ec299d4ef';
 
 // Elementos DOM
@@ -111,43 +97,24 @@ class GeradorEsboco {
             // Verificar se a coleção existe e se temos permissão
             console.log("Tentando carregar histórico para UID:", uid);
 
-            // Primeira tentativa: buscar sem orderBy para testar se a coleção existe
-            const testQuery = db.collection("esbocos").where("uid", "==", uid).limit(1);
-            const testSnapshot = await testQuery.get();
+            // ATENÇÃO: Para que orderBy("criadoEm", "desc") funcione eficientemente
+            // e sem erros em produção, um índice composto em (uid, criadoEm DESC)
+            // deve ser criado no Firestore para a coleção "esbocos".
+            // O Firebase geralmente sugere o link para criação no console quando detecta a necessidade.
+            // Removendo o fallback complexo, assumindo que o índice será criado.
+            const query = db.collection("esbocos")
+                .where("uid", "==", uid)
+                .orderBy("criadoEm", "desc")
+                .limit(10);
             
-            console.log("Teste de conexão com Firestore:", testSnapshot.size, "documentos encontrados");
-
-            // Se passou no teste, fazer a query completa
-            let query;
+            const snapshot = await query.get();
+            console.log("Query de histórico executada:", snapshot.size, "documentos");
             
-            // Tentar com orderBy primeiro
-            try {
-                query = db.collection("esbocos")
-                    .where("uid", "==", uid)
-                    .orderBy("criadoEm", "desc")
-                    .limit(10);
-                
-                const snapshot = await query.get();
-                console.log("Query com orderBy executada com sucesso:", snapshot.size, "documentos");
-                
-                this.processarHistorico(snapshot);
-                
-            } catch (orderByError) {
-                console.warn("Erro com orderBy, tentando sem ordenação:", orderByError);
-                
-                // Se orderBy falhar (provavelmente falta de índice), usar sem ordenação
-                query = db.collection("esbocos")
-                    .where("uid", "==", uid)
-                    .limit(10);
-                
-                const snapshot = await query.get();
-                console.log("Query sem orderBy executada:", snapshot.size, "documentos");
-                
-                this.processarHistorico(snapshot);
-            }
+            this.processarHistorico(snapshot);
 
         } catch (error) {
             console.error("Erro detalhado ao carregar histórico:", error);
+            // O erro pode ser devido à ausência do índice mencionado acima.
             console.error("Código do erro:", error.code);
             console.error("Mensagem do erro:", error.message);
             

@@ -5,263 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cadastro de Usuário</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-    body {
-      background: linear-gradient(to right, #667eea, #764ba2);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 1rem;
-    }
-    .container {
-      background: white;
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      max-width: 400px;
-      width: 100%;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 1.5rem;
-      color: #333;
-    }
-    input {
-      width: 100%;
-      padding: 0.75rem;
-      margin-bottom: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 0.5rem;
-      font-size: 1rem;
-      transition: border-color 0.3s ease;
-    }
-    input:focus {
-      outline: none;
-      border-color: #5a67d8;
-    }
-    button {
-      width: 100%;
-      padding: 0.75rem;
-      background-color: #5a67d8;
-      border: none;
-      color: white;
-      font-weight: bold;
-      font-size: 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin-bottom: 1rem;
-    }
-    button:hover {
-      background-color: #434190;
-    }
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    .btn-secondary {
-      background-color: transparent;
-      border: 2px solid #5a67d8;
-      color: #5a67d8;
-      margin-bottom: 0;
-    }
-    .btn-secondary:hover {
-      background-color: #5a67d8;
-      color: white;
-    }
-    .msg {
-      margin-top: 1rem;
-      text-align: center;
-      font-weight: 600;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      display: none;
-    }
-    .msg.success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    .msg.error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-    .loading {
-      display: none;
-      text-align: center;
-      margin-top: 1rem;
-    }
-    .spinner {
-      border: 2px solid #f3f3f3;
-      border-top: 2px solid #5a67d8;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      margin-right: 0.5rem;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="utils.css">
 </head>
 <body>
   <div class="container">
     <h2>Cadastrar Conta</h2>
     <form id="form-cadastro">
+      <label for="nome" class="visually-hidden">Nome</label>
       <input type="text" id="nome" placeholder="Nome" required />
+      <label for="sobrenome" class="visually-hidden">Sobrenome</label>
       <input type="text" id="sobrenome" placeholder="Sobrenome" required />
+      <label for="email" class="visually-hidden">Email</label>
       <input type="email" id="email" placeholder="Email" required />
+      <label for="senha" class="visually-hidden">Senha</label>
       <input type="password" id="senha" placeholder="Senha (mínimo 6 caracteres)" required minlength="6" />
       <button type="submit" id="btn-cadastro">Cadastrar</button>
     </form>
 
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
+    <div class="loading" id="loading" role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
       Processando...
     </div>
 
-    <div class="msg" id="mensagem"></div>
+    <div class="msg" id="mensagem" role="alert"></div>
     
-    <button type="button" class="btn-secondary" onclick="window.location.href='login.html'">
-      Já tenho cadastro
-    </button>
+    <a href="login.html" class="btn-link-style btn-secondary">Já tenho cadastro</a>
   </div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-  <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyD3VkepMFnqNckroCSjXot1AsWkFCcZr3Q",
-    authDomain: "ia-jw-44d10.firebaseapp.com",
-    projectId: "ia-jw-44d10",
-    storageBucket: "ia-jw-44d10.firebasestorage.app",
-    messagingSenderId: "336134615491",
-    appId: "1:336134615491:web:24154851afe41e4827cd76",
-    measurementId: "G-2Q96R643CK"
-  };
-  
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  const form = document.getElementById("form-cadastro");
-  const msg = document.getElementById("mensagem");
-  const loading = document.getElementById("loading");
-  const btnCadastro = document.getElementById("btn-cadastro");
-
-  function showMessage(text, type) {
-    msg.textContent = text;
-    msg.className = `msg ${type}`;
-    msg.style.display = 'block';
-    
-    setTimeout(() => {
-      msg.style.display = 'none';
-    }, 5000);
-  }
-
-  function showLoading(show) {
-    loading.style.display = show ? 'block' : 'none';
-    btnCadastro.disabled = show;
-  }
-
-  function validateForm(nome, sobrenome, email, senha) {
-    if (!nome || !sobrenome) {
-      showMessage("Por favor, preencha o nome e sobrenome", "error");
-      return false;
-    }
-    
-    if (senha.length < 6) {
-      showMessage("A senha deve ter pelo menos 6 caracteres", "error");
-      return false;
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      showMessage("Por favor, insira um email válido", "error");
-      return false;
-    }
-    
-    return true;
-  }
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    
-    const nome = document.getElementById("nome").value.trim();
-    const sobrenome = document.getElementById("sobrenome").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const senha = document.getElementById("senha").value;
-    
-    if (!validateForm(nome, sobrenome, email, senha)) {
-      return;
-    }
-    
-    const nomeCompleto = `${nome} ${sobrenome}`;
-    
-    showLoading(true);
-    msg.style.display = 'none';
-
-    try {
-      // Criar usuário no Firebase Auth
-      const cred = await auth.createUserWithEmailAndPassword(email, senha);
-      
-      // Atualizar perfil do usuário
-      await cred.user.updateProfile({
-        displayName: nomeCompleto
-      });
-
-      // Salvar dados no Firestore
-      await db.collection('usuarios').doc(cred.user.uid).set({
-        uid: cred.user.uid,
-        nome: nomeCompleto,
-        email: email,
-        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      showMessage("Cadastro realizado com sucesso! Redirecionando...", "success");
-      
-      setTimeout(() => {
-        window.location.href = "index.html";
-      }, 2000);
-      
-    } catch (error) {
-      let errorMessage = "Erro ao criar conta. Tente novamente.";
-      
-      // Tratar erros específicos do Firebase
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          errorMessage = "Este email já está sendo usado por outra conta.";
-          break;
-        case 'auth/invalid-email':
-          errorMessage = "Email inválido.";
-          break;
-        case 'auth/weak-password':
-          errorMessage = "A senha é muito fraca.";
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = "Erro de conexão. Verifique sua internet.";
-          break;
-      }
-      
-      showMessage(errorMessage, "error");
-    } finally {
-      showLoading(false);
-    }
-  });
-  </script>
+  <script src="firebase-init.js"></script>
+  <script src="auth.js"></script>
 </body>
 </html>
