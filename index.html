@@ -51,38 +51,13 @@
                 </div>
 
 
-                <button class="btn" onclick="gerarEsboco()">
+                <button class="btn" id="btnGerarEsboco">
                     🔍 Gerar Esboço
                 </button>
-                <script>
-                function gerarEsboco() {
-                    // Exemplo de lógica para mostrar o tema no início do esboço
-                    const tema = document.getElementById('tema').value;
-                    const resultTitle = document.getElementById('resultTitle');
-                    resultTitle.textContent = tema ? tema : 'Esboço Gerado';
-                    // Continue com o restante da lógica de geração do esboço...
-                }
-                </script>
             </div>
-            <div class="esboco-section" id="esbocoSection" style="display: none;">
-                <h2 id="esbocoTema"></h2>
-                <div id="esbocoConteudo"></div>
-            </div>
-            <script>
-            function gerarEsboco() {
-                const tema = document.getElementById('tema').value;
-                const esbocoSection = document.getElementById('esbocoSection');
-                const esbocoTema = document.getElementById('esbocoTema');
-                esbocoTema.textContent = tema ? tema : 'Esboço Gerado';
-                esbocoSection.style.display = 'block';
-
-                // Lógica adicional para gerar o conteúdo do esboço pode ser adicionada aqui
-                // Exemplo:
-                // document.getElementById('esbocoConteudo').innerHTML = 'Conteúdo do esboço...';
-            }
-            </script>
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
+            <!-- Seção de esboço redundante removida -->
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner" role="status" aria-label="Carregando"></div>
                 <p>Buscando informações na biblioteca JW.org...</p>
             </div>
 
