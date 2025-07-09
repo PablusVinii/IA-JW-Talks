@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="auth.css">
+  <link rel="stylesheet" href="utils.css">
+</head>
+<body>
+  <div class="container">
+    <h2>Entrar</h2>
+    <form id="form-login">
+      <label for="email" class="visually-hidden">Email</label>
+      <input type="email" id="email" placeholder="Email" required />
+      <label for="senha" class="visually-hidden">Senha</label>
+      <input type="password" id="senha" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+    </form>
+    <div class="msg" id="mensagem" role="alert"></div>
+    <a href="cadastro.html" class="btn-link-style btn-secondary">Criar nova conta</a>
+
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="firebase-init.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

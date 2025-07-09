@@ -3,93 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Pesquisa para esboços - Testemunhas de Jeová</title>
+    <title>Gerador de Esboços - Testemunhas de Jeová</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📖 Gerador de Esboços</h1>
-            <p>Testemunhas de Jeová - Preparação de discursos - Versão 1.1</p>
-        </div>
+    <!-- Menu Button -->
+    <button onclick="abrirMenu()" class="menu-btn" aria-label="Abrir menu">☰</button>
 
-        <div class="main-content">
-            <div class="form-section">
-                <h2 style="margin-bottom: 20px; color: #333;">Selecione o tipo de discurso:</h2>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="fecharMenu()" aria-label="Fechar menu">×</a>
+        <div id="userInfo">👤 Usuário: carregando...</div>
+        <hr>
+        <nav>
+            <h3><span role="img" aria-label="Relógio">🕓</span> Histórico de Esboços</h3>
+            <ul id="historicoList">
+                <!-- Histórico será carregado aqui -->
+            </ul>
+        </nav>
+        <hr>
+        <button onclick="logout()" class="btn sair-btn">🚪 Sair</button>
+    </aside>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📖 Gerador de Esboços</h1>
+            <p>Testemunhas de Jeová - Preparação de discursos - Versão 2.0</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Form Section -->
+            <section class="form-section">
+                <h2>Configurar Esboço</h2>
                 
                 <div class="form-group">
                     <label for="tipoDiscurso">Tipo de Discurso:</label>
                     <select id="tipoDiscurso" name="tipoDiscurso">
                         <option value="">Escolha uma opção...</option>
-                        <option value="publico">Discurso Público (Em breve ...)</option>
-                        <option value="tesouros">1. Tesouros da Palavra de Deus</option>                        
-                        <option value="publico">4. Iniciando conversas (Em breve ...)</option>
-                        <option value="publico">5. Cultivando o interesse (Em breve ...)</option>
-                        <option value="publico">6. Explicando suas crenças (Em breve ...)</option>
+                        <option value="publico">Discurso Público (Em breve...)</option>
+                        <option value="tesouros">1. Tesouros da Palavra de Deus</option>
+                        <option value="publico">4. Iniciando conversas (Em breve...)</option>
+                        <option value="publico">5. Cultivando o interesse (Em breve...)</option>
+                        <option value="publico">6. Explicando suas crenças (Em breve...)</option>
                     </select>
                 </div>
 
-                <div class="form-group"></div>
+                <div class="form-group">
+                    <label for="tempo">Tempo estimado (minutos):</label>
+                    <input type="number" id="tempo" name="tempo" placeholder="Digite o tempo em minutos..." min="1" max="10">
+                </div>
 
                 <div class="form-group">
                     <label for="tema">Tema Específico:</label>
-                    <input type="text" id="tema" name="tema" placeholder="Digite um tema específico...">
+                    <input type="text" id="tema" name="tema" placeholder="Digite o tema do seu discurso...">
                 </div>
 
                 <div class="form-group">
                     <label for="versiculosOpicionais">Versículos Bíblicos (opcional):</label>
                     <input type="text" id="versiculosOpicionais" name="versiculosOpicionais" placeholder="Ex: João 3:16; Salmo 23:1; Mateus 6:33">
                 </div>
+
                 <div class="form-group">
-                    <label for="topicosOpicionais">Topicos a serem abordados (opcional):</label>
-                    <input type="text" id="topicosOpicionais" name="topicosOpicionais" placeholder="Topicos que você gostaria de incluir no esboço...">
+                    <label for="topicosOpicionais">Tópicos a serem abordados (opcional):</label>
+                    <input type="text" id="topicosOpicionais" name="topicosOpicionais" placeholder="Tópicos que você gostaria de incluir...">
                 </div>
 
                 <div class="form-group">
                     <label for="informacoesAdicionais">Informações Adicionais (opcional):</label>
-                    <input type="text" id="informacoesAdicionais" name="informacoesAdicionais" placeholder="Ex: mais referências bíblicas, tom animador, exemplos práticos...">
+                    <input type="text" id="informacoesAdicionais" name="informacoesAdicionais" placeholder="Ex: referências extras, tom animador, exemplos práticos...">
                 </div>
-
 
                 <button class="btn" onclick="gerarEsboco()">
                     🔍 Gerar Esboço
                 </button>
-                <script>
-                function gerarEsboco() {
-                    // Exemplo de lógica para mostrar o tema no início do esboço
-                    const tema = document.getElementById('tema').value;
-                    const resultTitle = document.getElementById('resultTitle');
-                    resultTitle.textContent = tema ? tema : 'Esboço Gerado';
-                    // Continue com o restante da lógica de geração do esboço...
-                }
-                </script>
             </div>
-            <div class="esboco-section" id="esbocoSection" style="display: none;">
-                <h2 id="esbocoTema"></h2>
-                <div id="esbocoConteudo"></div>
-            </div>
-            <script>
-            function gerarEsboco() {
-                const tema = document.getElementById('tema').value;
-                const esbocoSection = document.getElementById('esbocoSection');
-                const esbocoTema = document.getElementById('esbocoTema');
-                esbocoTema.textContent = tema ? tema : 'Esboço Gerado';
-                esbocoSection.style.display = 'block';
 
-                // Lógica adicional para gerar o conteúdo do esboço pode ser adicionada aqui
-                // Exemplo:
-                // document.getElementById('esbocoConteudo').innerHTML = 'Conteúdo do esboço...';
-            }
-            </script>
+            <!-- Loading -->
             <div class="loading" id="loading">
                 <div class="spinner"></div>
                 <p>Buscando informações na biblioteca JW.org...</p>
             </div>
 
+            <!-- Result Section -->
             <div class="result-section" id="resultSection">
                 <div class="result-header">
-                    <h2 class="result-title" id="resultTitle"></h2>
-                    <p class="result-type" id="resultType"></p>
+                    <h2 class="result-title" id="resultTitle">Esboço Gerado</h2>
+                    <p class="result-type" id="resultType">Discurso Personalizado</p>
                 </div>
 
                 <div class="pontos-section">
@@ -98,24 +107,31 @@
                 </div>
 
                 <div class="referencias-section">
-                    <h3 class="section-title">📚 Referências Bíblicas</h3>
+                    <h3 class="section-title">📚 Conteúdo Completo</h3>
                     <div class="referencias-list" id="referenciasList"></div>
+                </div>
+
+                <div class="download-section">
+                    <button class="btn" id="btnDownload" onclick="baixarComoWord()">
+                        📥 Baixar como Word
+                    </button>
+                    <button class="btn" onclick="exportarResultado()" style="margin-left: 10px;">
+                        📋 Copiar Texto
+                    </button>
                 </div>
             </div>
 
-            <div class="error" id="errorMessage" style="display: none;"></div>
-        </div>
-    <div style="text-align: right; margin-top: 20px;">
-    <button class="btn" id="btnDownload" onclick="baixarComoWord()" style="display: none;">
-        📥 Baixar como Word
-    </button>
+            <!-- Error Message -->
+            <div class="error" id="errorMessage" role="alert"></div>
+        </section> <!-- Fechando form-section -->
+        </main> <!-- Fechando main-content -->
     </div>
-    </div>
-    
 
+    <!-- Footer -->
     <footer class="footer">
         <p>Desenvolvido por <a href="https://github.com/PablusVinii/" target="_blank">Pablus Vinii</a> - Estudante de Engenharia de Software</p>
     </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
