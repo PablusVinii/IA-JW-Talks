@@ -3,52 +3,53 @@
 // ATENÇÃO: Esta URL deve ser configurada para o ambiente de produção.
 const API_URL = 'http://localhost:5678/webhook-test/fd061969-eb2c-4355-89da-910ec299d4ef';
 
-// Elementos DOM
+// Elementos DOM utilizados na aplicação, mapeados para fácil acesso
 const elementos = {
-    tipoDiscurso: document.getElementById('tipoDiscurso'),
-    tema: document.getElementById('tema'),
-    tempo: document.getElementById('tempo'),
-    informacoesAdicionais: document.getElementById('informacoesAdicionais'),
-    versiculosOpicionais: document.getElementById('versiculosOpicionais'),
-    topicosOpicionais: document.getElementById('topicosOpicionais'),
-    loading: document.getElementById('loading'),
-    resultSection: document.getElementById('resultSection'),
-    errorMessage: document.getElementById('errorMessage'),
-    resultTitle: document.getElementById('resultTitle'),
-    resultType: document.getElementById('resultType'),
-    pontosList: document.getElementById('pontosList'),
-    referenciasList: document.getElementById('referenciasList'),
-    userInfo: document.getElementById('userInfo'),
-    historicoList: document.getElementById('historicoList'),
-    sidebar: document.getElementById('sidebar'),
-    btnDownload: document.getElementById('btnDownload')
+    tipoDiscurso: document.getElementById('tipoDiscurso'), // Select do tipo de discurso
+    tema: document.getElementById('tema'), // Input do tema
+    tempo: document.getElementById('tempo'), // Input do tempo
+    informacoesAdicionais: document.getElementById('informacoesAdicionais'), // Input de informações adicionais
+    versiculosOpicionais: document.getElementById('versiculosOpicionais'), // Input de versículos opcionais
+    topicosOpicionais: document.getElementById('topicosOpicionais'), // Input de tópicos opcionais
+    loading: document.getElementById('loading'), // Elemento de loading
+    resultSection: document.getElementById('resultSection'), // Seção de resultado
+    errorMessage: document.getElementById('errorMessage'), // Mensagem de erro
+    resultTitle: document.getElementById('resultTitle'), // Título do resultado
+    resultType: document.getElementById('resultType'), // Tipo do resultado
+    pontosList: document.getElementById('pontosList'), // Lista de pontos (não utilizado)
+    referenciasList: document.getElementById('referenciasList'), // Lista de referências/resultados
+    userInfo: document.getElementById('userInfo'), // Exibição do usuário logado
+    historicoList: document.getElementById('historicoList'), // Lista de histórico de esboços
+    sidebar: document.getElementById('sidebar'), // Menu lateral
+    btnDownload: document.getElementById('btnDownload') // Botão de download
 };
 
-// Classe principal da aplicação
+// Classe principal da aplicação, responsável por toda a lógica de geração, exibição e histórico de esboços
 class GeradorEsboco {
     constructor() {
-        this.usuarioAtual = null;
-        this.inicializar();
+        this.usuarioAtual = null; // Usuário autenticado
+        this.inicializar(); // Inicializa listeners e autenticação
     }
 
+    // Inicializa listeners de eventos e autenticação
     inicializar() {
         this.configurarEventListeners();
         this.configurarAuthStateListener();
     }
 
-    // Configurar listeners de eventos
+    // Configura os listeners dos elementos do DOM para interação do usuário
     configurarEventListeners() {
-        // Evento para gerar esboço ao pressionar Enter
+        // Gera esboço ao pressionar Enter no campo tema
         elementos.tema?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.gerarEsboco();
         });
 
-        // Esconder elementos quando mudar tipo de discurso
+        // Esconde elementos ao mudar o tipo de discurso
         elementos.tipoDiscurso?.addEventListener('change', () => {
             this.esconderElementos();
         });
 
-        // Esconder mensagem de erro ao digitar
+        // Esconde mensagem de erro ao digitar no campo tema
         elementos.tema?.addEventListener('input', () => {
             if (elementos.errorMessage?.style.display === 'block') {
                 elementos.errorMessage.style.display = 'none';
@@ -56,7 +57,7 @@ class GeradorEsboco {
         });
     }
 
-    // Configurar listener de autenticação
+    // Configura o listener para mudanças no estado de autenticação do Firebase
     configurarAuthStateListener() {
         auth.onAuthStateChanged(async (user) => {
             this.usuarioAtual = user;
@@ -69,7 +70,7 @@ class GeradorEsboco {
         });
     }
 
-    // Carregar dados do usuário
+    // Carrega dados do usuário autenticado e exibe no layout
     async carregarDadosUsuario(user) {
         try {
             const nomeUsuario = user.displayName || user.email || "Usuário";
@@ -78,14 +79,14 @@ class GeradorEsboco {
                 elementos.userInfo.textContent = `👤 Usuário: ${nomeUsuario}`;
             }
 
-            await this.carregarHistorico(user.uid);
+            await this.carregarHistorico(user.uid); // Carrega histórico do usuário
         } catch (error) {
             console.error("Erro ao carregar dados do usuário:", error);
             this.mostrarErro("Erro ao carregar dados do usuário");
         }
     }
 
-    // Carregar histórico do usuário - VERSÃO CORRIGIDA
+    // Carrega o histórico de esboços do usuário autenticado
     async carregarHistorico(uid) {
         if (!elementos.historicoList) {
             console.warn("Elemento historicoList não encontrado");
@@ -95,14 +96,7 @@ class GeradorEsboco {
         try {
             elementos.historicoList.innerHTML = '<li>Carregando histórico...</li>';
 
-            // Verificar se a coleção existe e se temos permissão
-            console.log("Tentando carregar histórico para UID:", uid);
-
-            // ATENÇÃO: Para que orderBy("criadoEm", "desc") funcione eficientemente
-            // e sem erros em produção, um índice composto em (uid, criadoEm DESC)
-            // deve ser criado no Firestore para a coleção "esbocos".
-            // O Firebase geralmente sugere o link para criação no console quando detecta a necessidade.
-            // Removendo o fallback complexo, assumindo que o índice será criado.
+            // Consulta os últimos 10 esboços do usuário, ordenados por data de criação
             const query = db.collection("esbocos")
                 .where("uid", "==", uid)
                 .orderBy("criadoEm", "desc")
@@ -111,7 +105,7 @@ class GeradorEsboco {
             const snapshot = await query.get();
             console.log("Query de histórico executada:", snapshot.size, "documentos");
             
-            this.processarHistorico(snapshot);
+            this.processarHistorico(snapshot); // Processa e exibe o histórico
 
         } catch (error) {
             console.error("Erro detalhado ao carregar histórico:", error);
@@ -119,7 +113,7 @@ class GeradorEsboco {
             console.error("Código do erro:", error.code);
             console.error("Mensagem do erro:", error.message);
             
-            // Mostrar erro mais específico
+            // Mostra mensagem de erro específica para o usuário
             let mensagemErro = "Erro ao carregar histórico.";
             
             if (error.code === 'permission-denied') {
@@ -134,7 +128,7 @@ class GeradorEsboco {
         }
     }
 
-    // Processar dados do histórico
+    // Processa o snapshot do Firestore e exibe o histórico de esboços na sidebar
     processarHistorico(snapshot) {
         elementos.historicoList.innerHTML = '';
 
@@ -143,19 +137,20 @@ class GeradorEsboco {
             return;
         }
 
-        // Converter para array e ordenar manualmente se necessário
+        // Converte os documentos em array e ordena por data
         const docs = [];
         snapshot.forEach(doc => {
             docs.push({ id: doc.id, data: doc.data() });
         });
 
-        // Ordenar por data se não foi feito no query
+        // Ordena manualmente por data, caso necessário
         docs.sort((a, b) => {
             const dateA = a.data.criadoEm?.toDate() || new Date(0);
             const dateB = b.data.criadoEm?.toDate() || new Date(0);
             return dateB - dateA; // Ordem decrescente
         });
 
+        // Cria elementos de lista para cada esboço do histórico
         docs.forEach(({ id, data }) => {
             try {
                 const li = document.createElement('li');
@@ -187,6 +182,7 @@ class GeradorEsboco {
                     transition: background-color 0.2s;
                 `;
                 
+                // Destaca item ao passar o mouse
                 li.addEventListener('mouseenter', () => {
                     li.style.backgroundColor = '#e8f4f8';
                 });
@@ -195,6 +191,7 @@ class GeradorEsboco {
                     li.style.backgroundColor = '#f9f9f9';
                 });
                 
+                // Permite carregar o esboço ao clicar no item
                 li.addEventListener('click', () => this.carregarEsbocoDoHistorico(id));
                 
                 elementos.historicoList.appendChild(li);
@@ -205,7 +202,7 @@ class GeradorEsboco {
         });
     }
 
-    // Formatar tipo de discurso para exibição
+    // Formata o tipo de discurso para exibição amigável
     formatarTipoDiscurso(tipo) {
         const tipos = {
             'estudante': 'Estudante',
@@ -217,7 +214,7 @@ class GeradorEsboco {
         return tipos[tipo] || tipo;
     }
 
-    // Carregar esboço do histórico
+    // Carrega um esboço específico do histórico ao clicar em um item
     async carregarEsbocoDoHistorico(docId) {
         try {
             console.log("Carregando esboço do histórico:", docId);
@@ -228,7 +225,7 @@ class GeradorEsboco {
                 const data = doc.data();
                 console.log("Dados do esboço carregado:", data);
                 
-                // Verificar se o conteúdo existe
+                // Verifica se o conteúdo existe
                 if (data.conteudo) {
                     this.mostrarResultado({ output: data.conteudo });
                     this.fecharMenu();
@@ -245,7 +242,7 @@ class GeradorEsboco {
         }
     }
 
-    // Função principal para gerar esboço
+    // Função principal para gerar um novo esboço a partir do formulário
     async gerarEsboco() {
         const dadosFormulario = this.obterDadosFormulario();
         
@@ -257,7 +254,7 @@ class GeradorEsboco {
         this.esconderElementos();
 
         try {
-            const response = await this.enviarRequisicao(dadosFormulario);
+            const response = await this.enviarRequisicao(dadosFormulario); // Chama API
             const data = await response.json();
             
             console.log('Resposta do servidor:', data);
@@ -266,8 +263,8 @@ class GeradorEsboco {
                 throw new Error('Resposta inválida do servidor');
             }
 
-            await this.salvarEsbocoNoFirestore(dadosFormulario, data);
-            this.mostrarResultado(data);
+            await this.salvarEsbocoNoFirestore(dadosFormulario, data); // Salva no Firestore
+            this.mostrarResultado(data); // Exibe resultado
             
             if (elementos.btnDownload) {
                 elementos.btnDownload.style.display = 'inline-block';
@@ -281,7 +278,7 @@ class GeradorEsboco {
         }
     }
 
-    // Obter dados do formulário
+    // Obtém os dados preenchidos no formulário
     obterDadosFormulario() {
         return {
             tipoDiscurso: elementos.tipoDiscurso?.value || '',
@@ -293,7 +290,7 @@ class GeradorEsboco {
         };
     }
 
-    // Validar dados do formulário
+    // Valida os dados do formulário antes de enviar para a API
     validarDados(dados) {
         if (!dados.tipoDiscurso) {
             this.mostrarAlerta('Por favor, selecione o tipo de discurso!');
@@ -313,7 +310,7 @@ class GeradorEsboco {
         return true;
     }
 
-    // Enviar requisição para API
+    // Envia os dados do formulário para a API e retorna a resposta
     async enviarRequisicao(dados) {
         const temaFormatado = encodeURIComponent(dados.tema);
         
@@ -337,7 +334,7 @@ class GeradorEsboco {
         return response;
     }
 
-    // Salvar esboço no Firestore - VERSÃO MELHORADA
+    // Salva o esboço gerado no Firestore, vinculado ao usuário autenticado
     async salvarEsbocoNoFirestore(dadosFormulario, resultado) {
         if (!this.usuarioAtual) {
             console.warn("Usuário não autenticado, não é possível salvar");
@@ -369,7 +366,7 @@ class GeradorEsboco {
             const docRef = await db.collection("esbocos").add(docData);
             console.log("Esboço salvo com ID:", docRef.id);
 
-            // Recarregar histórico após salvar
+            // Recarrega histórico após salvar
             await this.carregarHistorico(this.usuarioAtual.uid);
             
             this.mostrarNotificacao('Esboço salvo com sucesso!');
@@ -379,12 +376,12 @@ class GeradorEsboco {
             console.error("Código do erro:", error.code);
             console.error("Mensagem do erro:", error.message);
             
-            // Não mostrar erro para o usuário se for apenas problema de salvamento
+            // Não mostra erro para o usuário se for apenas problema de salvamento
             // O esboço ainda será exibido
         }
     }
 
-    // Mostrar resultado
+    // Exibe o resultado do esboço gerado na tela
     mostrarResultado(esboco) {
         try {
             const texto = Array.isArray(esboco) ? esboco[0].output : esboco.output;
@@ -434,12 +431,12 @@ class GeradorEsboco {
         }
     }
 
-    // Formatar texto em negrito
+    // Formata trechos do texto entre **negrito** para HTML <strong>
     formatarNegrito(texto) {
         return texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     }
 
-    // Mostrar/esconder carregamento
+    // Exibe ou esconde o indicador de carregamento e desabilita o botão principal
     mostrarCarregamento(mostrar) {
         if (elementos.loading) {
             elementos.loading.style.display = mostrar ? 'block' : 'none';
@@ -452,7 +449,7 @@ class GeradorEsboco {
         }
     }
 
-    // Esconder elementos
+    // Esconde seções de resultado, erro e download
     esconderElementos() {
         if (elementos.resultSection) {
             elementos.resultSection.style.display = 'none';
@@ -465,7 +462,7 @@ class GeradorEsboco {
         }
     }
 
-    // Mostrar erro
+    // Exibe mensagem de erro na tela
     mostrarErro(mensagem) {
         if (elementos.errorMessage) {
             elementos.errorMessage.textContent = mensagem;
@@ -474,31 +471,31 @@ class GeradorEsboco {
         }
     }
 
-    // Mostrar alerta
+    // Exibe alerta nativo do navegador
     mostrarAlerta(mensagem) {
         alert(mensagem);
     }
 
-    // Redirecionar para login
+    // Redireciona o usuário para a tela de login
     redirecionarParaLogin() {
         window.location.href = "login.html";
     }
 
-    // Abrir menu lateral
+    // Abre o menu lateral (sidebar)
     abrirMenu() {
         if (elementos.sidebar) {
             elementos.sidebar.style.width = "300px";
         }
     }
 
-    // Fechar menu lateral
+    // Fecha o menu lateral (sidebar)
     fecharMenu() {
         if (elementos.sidebar) {
             elementos.sidebar.style.width = "0";
         }
     }
 
-    // Logout
+    // Realiza logout do usuário autenticado
     async logout() {
         try {
             await auth.signOut();
@@ -509,7 +506,7 @@ class GeradorEsboco {
         }
     }
 
-    // Copiar texto para clipboard
+    // Copia texto para o clipboard do usuário
     async copiarTexto(texto) {
         try {
             await navigator.clipboard.writeText(texto);
@@ -529,7 +526,7 @@ class GeradorEsboco {
         }
     }
 
-    // Mostrar notificação
+    // Exibe uma notificação temporária no canto da tela
     mostrarNotificacao(mensagem) {
         const notificacao = document.createElement('div');
         notificacao.className = 'notificacao';
@@ -561,7 +558,7 @@ class GeradorEsboco {
         }, 3000);
     }
 
-    // Baixar como Word
+    // Permite baixar o esboço gerado como arquivo .doc (Word)
     baixarComoWord() {
         const titulo = elementos.resultTitle?.textContent || 'Esboço';
         const tipo = elementos.resultType?.textContent || '';
@@ -601,7 +598,7 @@ class GeradorEsboco {
         this.mostrarNotificacao('Download iniciado!');
     }
 
-    // Exportar resultado (copiar)
+    // Exporta o resultado do esboço para o clipboard
     exportarResultado() {
         const titulo = elementos.resultTitle?.textContent || '';
         const tipo = elementos.resultType?.textContent || '';
@@ -616,7 +613,7 @@ class GeradorEsboco {
         this.copiarTexto(conteudo);
     }
 
-    // Limpar formulário
+    // Limpa todos os campos do formulário e esconde resultados
     limparFormulario() {
         if (elementos.tipoDiscurso) elementos.tipoDiscurso.value = '';
         if (elementos.tempo) elementos.tempo.value = '';
@@ -629,12 +626,16 @@ class GeradorEsboco {
     }
 }
 
-// Inicializar aplicação quando o DOM estiver carregado
+// Inicializa a aplicação quando o DOM estiver carregado
+// Cria uma instância global de GeradorEsboco acessível pelo window
+// Isso permite que funções globais chamem métodos da classe
+
 document.addEventListener('DOMContentLoaded', () => {
     window.geradorEsboco = new GeradorEsboco();
 });
 
-// Funções globais para serem chamadas pelo HTML
+// Funções globais para serem chamadas pelo HTML (ex: onclick nos botões)
+// Cada função chama o método correspondente da instância global
 function gerarEsboco() {
     window.geradorEsboco?.gerarEsboco();
 }
