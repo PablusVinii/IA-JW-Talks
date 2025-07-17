@@ -80,6 +80,17 @@ body {
     box-sizing: border-box;
 }
 
+.result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+#btnGerarNovo {
+    background: linear-gradient(135deg, #28a745, #218838);
+}
+
 .menu-btn:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-medium);

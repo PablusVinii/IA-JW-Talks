@@ -47,8 +47,9 @@ function gerarEsboco() {
     }
     if (elementos.errorMessage) elementos.errorMessage.style.display = 'none';
 
-    // Exibir loading
+    // Exibir loading e esconder formulário
     if (elementos.loading) elementos.loading.style.display = 'block';
+    if (elementos.formSection) elementos.formSection.style.display = 'none';
     if (elementos.resultSection) elementos.resultSection.style.display = 'none';
     if (elementos.btnDownload) elementos.btnDownload.style.display = 'none';
 
@@ -78,6 +79,7 @@ function gerarEsboco() {
             data = data[0] || {};
         }
         if (elementos.loading) elementos.loading.style.display = 'none';
+        if (elementos.formSection) elementos.formSection.style.display = 'none'; // Manter formulário escondido
         if (elementos.resultSection) elementos.resultSection.style.display = 'block';
         if (elementos.btnDownload) elementos.btnDownload.style.display = 'inline-block';
 
@@ -133,12 +135,18 @@ function gerarEsboco() {
     })
     .catch((err) => {
         if (elementos.loading) elementos.loading.style.display = 'none';
+        if (elementos.formSection) elementos.formSection.style.display = 'block'; // Mostrar formulário no erro
         if (elementos.resultSection) elementos.resultSection.style.display = 'none';
         if (elementos.errorMessage) {
             elementos.errorMessage.textContent = err.message || 'Erro ao gerar esboço.';
             elementos.errorMessage.style.display = 'block';
         }
     });
+}
+
+function mostrarFormulario() {
+    if (elementos.formSection) elementos.formSection.style.display = 'block';
+    if (elementos.resultSection) elementos.resultSection.style.display = 'none';
 }
 
 function formatarConteudo(texto) {
@@ -202,7 +210,7 @@ function exportarResultado() {
 }
 
 // Configurações da API
-const API_URL = 'https://primary-production-5b08.up.railway.app/webhook-test/fd061969-eb2c-4355-89da-910ec299d4ef';
+const API_URL = 'https://primary-production-5b08.up.railway.app/webhook/fd061969-eb2c-4355-89da-910ec299d4ef';
 
 const elementos = {
     tipoDiscurso: document.getElementById('tipoDiscurso'),
@@ -212,6 +220,7 @@ const elementos = {
     versiculosOpicionais: document.getElementById('versiculosOpicionais'),
     topicosOpicionais: document.getElementById('topicosOpicionais'),
     loading: document.getElementById('loading'),
+    formSection: document.getElementById('formSection'), // Adicionado
     resultSection: document.getElementById('resultSection'),
     errorMessage: document.getElementById('errorMessage'),
     resultTitle: document.getElementById('resultTitle'),

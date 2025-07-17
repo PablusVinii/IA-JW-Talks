@@ -46,7 +46,7 @@
 
         <main class="main-content">
             <!-- Form Section -->
-            <section class="form-section">
+            <section class="form-section" id="formSection">
                 <h2>Configurar Esboço</h2>
                 
                 <div class="form-group">
@@ -115,11 +115,14 @@
                     <div class="referencias-list" id="referenciasList"></div>
                 </div>
 
-                <div class="download-section">
+                <div class="result-actions">
+                    <button class="btn" id="btnGerarNovo" onclick="mostrarFormulario()">
+                        + Gerar Novo Esboço
+                    </button>
                     <button class="btn" id="btnDownload" onclick="baixarComoWord()">
                         📥 Baixar como Word
                     </button>
-                    <button class="btn" onclick="exportarResultado()" style="margin-left: 10px;">
+                    <button class="btn" onclick="exportarResultado()">
                         📋 Copiar Texto
                     </button>
                 </div>
