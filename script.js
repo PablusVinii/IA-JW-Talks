@@ -116,6 +116,7 @@ function gerarEsboco() {
                 versiculos: versiculos,
                 topicos: topicos,
                 informacoes: informacoes,
+                favorito: false, // Adicionado para garantir que o campo exista na criação
                 criadoEm: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 // Recarregar histórico
