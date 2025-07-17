@@ -246,6 +246,74 @@ class GeradorEsboco {
         });
     }
 
+    // Atualizar menu para mostrar/esconder link do admin
+    atualizarMenuAdmin() {
+        const adminLink = document.getElementById('adminLink');
+        const nav = document.querySelector('#sidebar nav');
+
+        if (this.isAdmin) {
+            // Se o usuário é admin e o link não existe, cria e adiciona
+            if (!adminLink && nav) {
+                const adminLinkElement = document.createElement('a');
+                adminLinkElement.href = "admin.html";
+                adminLinkElement.id = 'adminLink';
+                adminLinkElement.innerHTML = '🔒 Painel Admin';
+                adminLinkElement.style.cssText = `
+                    display: block;
+                    padding: 10px 20px;
+                    margin: 10px 0;
+                    background: linear-gradient(135deg, #e13b83, #c72c5c);
+                    color: white;
+                    text-align: center;
+                    border-radius: 5px;
+                    text-decoration: none;
+                    font-weight: 600;
+                `;
+                nav.insertAdjacentElement('afterend', adminLinkElement);
+            }
+        } else {
+            // Se o usuário não é admin e o link existe, remove
+            if (adminLink) {
+                adminLink.remove();
+            }
+        }
+    }
+
+    // Criar e exibir a seção de notificações no menu
+    criarSecaoNotificacoes() {
+        if (document.getElementById('notificacoesSection')) return; // Já existe
+
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+
+        const notificacoesSection = document.createElement('div');
+        notificacoesSection.id = 'notificacoesSection';
+        notificacoesSection.innerHTML = `
+            <hr>
+            <h3>
+                <span role="img" aria-label="Sino">🔔</span> Notificações
+                <span id="notificacaoCount" class="notification-badge" style="display:none;">0</span>
+            </h3>
+            <ul id="notificacoesList">
+                <!-- Notificações serão carregadas aqui -->
+            </ul>
+            <button id="btnMarcarLidas" class="btn" style="width:100%; margin-top:10px;">Marcar todas como lidas</button>
+        `;
+
+        // Inserir antes do botão de logout, se existir
+        const logoutBtn = sidebar.querySelector('.sair-btn');
+        if (logoutBtn) {
+            logoutBtn.parentNode.insertBefore(notificacoesSection, logoutBtn);
+        } else {
+            sidebar.appendChild(notificacoesSection);
+        }
+
+        const btnMarcarLidas = document.getElementById('btnMarcarLidas');
+        if (btnMarcarLidas) {
+            btnMarcarLidas.addEventListener('click', () => this.marcarTodasComoLidas());
+        }
+    }
+
     // Carregar dados do usuário e atualizar menu
     async carregarDadosUsuario(user) {
         try {
@@ -258,6 +326,8 @@ class GeradorEsboco {
             await this.verificarAdminStatus(user.uid);
             
             await this.carregarHistorico(user.uid);
+            
+            this.criarSecaoNotificacoes();
             await this.carregarNotificacoes(user.uid);
         } catch (error) {
             console.error("Erro ao carregar dados do usuário:", error);
@@ -278,28 +348,35 @@ class GeradorEsboco {
 
     // Atualizar menu para mostrar/esconder link do admin
     atualizarMenuAdmin() {
-        setTimeout(() => {
-            const adminLink = document.getElementById('adminLink');
-            
-            if (this.isAdmin) {
-                if (!adminLink) {
-                    const perfilLink = document.querySelector('a[href="perfil.html"]');
-                    if (perfilLink && perfilLink.parentNode) {
-                        const adminLinkElement = document.createElement('a');
-                        adminLinkElement.href = "admin-login.html";
-                        adminLinkElement.className = 'btn';
-                        adminLinkElement.id = 'adminLink';
-                        adminLinkElement.style.cssText = "margin: 8px 20px 0 20px; display:block; text-align:center; background: linear-gradient(135deg, #f93fb0%, #f5576c100)";
-                        adminLinkElement.textContent = '🔒 Painel Admin';
-                        perfilLink.parentNode.insertBefore(adminLinkElement, perfilLink.nextSibling);
-                    }
-                }
-            } else {
-                if (adminLink) {
-                    adminLink.remove();
-                }
+        const adminLink = document.getElementById('adminLink');
+        const nav = document.querySelector('#sidebar nav');
+
+        if (this.isAdmin) {
+            // Se o usuário é admin e o link não existe, cria e adiciona
+            if (!adminLink && nav) {
+                const adminLinkElement = document.createElement('a');
+                adminLinkElement.href = "admin.html";
+                adminLinkElement.id = 'adminLink';
+                adminLinkElement.innerHTML = '🔒 Painel Admin';
+                adminLinkElement.style.cssText = `
+                    display: block;
+                    padding: 10px 20px;
+                    margin: 10px 0;
+                    background: linear-gradient(135deg, #e13b83, #c72c5c);
+                    color: white;
+                    text-align: center;
+                    border-radius: 5px;
+                    text-decoration: none;
+                    font-weight: 600;
+                `;
+                nav.insertAdjacentElement('afterend', adminLinkElement);
             }
-        }, 100);
+        } else {
+            // Se o usuário não é admin e o link existe, remove
+            if (adminLink) {
+                adminLink.remove();
+            }
+        }
     }
 
     // Carregar histórico de esboços do usuário
