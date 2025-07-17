@@ -1,7 +1,8 @@
 // Configurações da API
 // Firebase auth e db são inicializados em firebase-init.js e estão disponíveis globalmente.
 // ATENÇÃO: Esta URL deve ser configurada para o ambiente de produção.
-const API_URL = 'https://web-production-8bcb.up.railway.app';
+const API_URL = 'https://web-production-8bcb.up.railway.app/gerar-discurso';
+
 
 // Elementos DOM utilizados na aplicação, mapeados para fácil acesso
 const elementos = {
@@ -23,6 +24,8 @@ const elementos = {
     sidebar: document.getElementById('sidebar'), // Menu lateral
     btnDownload: document.getElementById('btnDownload') // Botão de download
 };
+
+  
 
 // Classe principal da aplicação, responsável por toda a lógica de geração, exibição e histórico de esboços
 class GeradorEsboco {
@@ -78,7 +81,7 @@ class GeradorEsboco {
             if (elementos.userInfo) {
                 elementos.userInfo.textContent = `👤 Usuário: ${nomeUsuario}`;
             }
-
+            
             await this.carregarHistorico(user.uid); // Carrega histórico do usuário
         } catch (error) {
             console.error("Erro ao carregar dados do usuário:", error);
@@ -101,7 +104,7 @@ class GeradorEsboco {
                 .where("uid", "==", uid)
                 .orderBy("criadoEm", "desc")
                 .limit(10);
-            
+                
             const snapshot = await query.get();
             console.log("Query de histórico executada:", snapshot.size, "documentos");
             
@@ -139,7 +142,7 @@ class GeradorEsboco {
 
         // Converte os documentos em array e ordena por data
         const docs = [];
-        snapshot.forEach(doc => {
+            snapshot.forEach(doc => {
             docs.push({ id: doc.id, data: doc.data() });
         });
 
@@ -201,10 +204,10 @@ class GeradorEsboco {
                 });
                 
                 elementos.historicoList.appendChild(li);
-                
+            
             } catch (itemError) {
                 console.error("Erro ao processar item do histórico:", itemError);
-            }
+        }
         });
     }
 
@@ -638,7 +641,7 @@ class GeradorEsboco {
 
 document.addEventListener('DOMContentLoaded', () => {
     window.geradorEsboco = new GeradorEsboco();
-});
+}); 
 
 // Funções globais para serem chamadas pelo HTML (ex: onclick nos botões)
 // Cada função chama o método correspondente da instância global
