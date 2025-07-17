@@ -1,0 +1,195 @@
+// Regras de Segurança do Firestore para IA-JW-Talks
+// Copie estas regras para o console do Firebase > Firestore > Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // === COLEÇÕES PRINCIPAIS ===
+    
+    // Coleção de usuários
+    match /usuarios/{userId} {
+      // Usuários podem ler e atualizar seus próprios dados
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      // Qualquer usuário autenticado pode criar seu perfil
+      allow create: if request.auth != null;
+      // Admins podem ler, atualizar e deletar qualquer usuário
+      allow read, update, delete: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de esboços
+    match /esbocos/{esbocoId} {
+      // Usuários podem ler e escrever seus próprios esboços
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.uid;
+      // Admins podem ler, atualizar e deletar qualquer esboço
+      allow read, update, delete: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de logs
+    match /logs/{logId} {
+      // Usuários autenticados podem criar logs
+      allow create: if request.auth != null;
+      // Admins podem ler todos os logs
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de notificações - ATUALIZADA PARA NOTIFICAÇÕES GERAIS
+    match /notificacoes/{notificacaoId} {
+      // Admins podem fazer tudo (ler, criar, atualizar, deletar)
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+      
+      // Usuários autenticados podem ler notificações:
+      // 1. Notificações específicas para eles (destinatarios contém seu UID)
+      // 2. Notificações gerais (geral == true)
+      allow read: if request.auth != null && (
+        request.auth.uid in resource.data.destinatarios ||
+        resource.data.geral == true
+      );
+      
+      // Usuários autenticados podem atualizar apenas o status de leitura de suas notificações
+      allow update: if request.auth != null && (
+        // Pode atualizar notificações específicas para eles
+        (request.auth.uid in resource.data.destinatarios && resource.data.geral == false) ||
+        // Pode atualizar notificações gerais (para marcar como lida)
+        resource.data.geral == true
+      ) && 
+      // Apenas permite atualizar campos específicos de leitura
+      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lida', 'lidaEm']);
+      
+      // Admins podem deletar qualquer notificação
+      allow delete: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de backups
+    match /backups/{backupId} {
+      // Apenas admins podem criar e ler backups
+      allow create, read: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de relatórios
+    match /relatorios/{relatorioId} {
+      // Apenas admins podem criar e ler relatórios
+      allow create, read: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // === NOVAS COLEÇÕES PARA FUNCIONALIDADES AVANÇADAS ===
+    
+    // Coleção de tokens de notificação
+    match /tokens_notificacao/{tokenId} {
+      // Usuários podem gerenciar seus próprios tokens
+      allow read, write: if request.auth != null && tokenId == request.auth.uid;
+    }
+    
+    // Coleção de notificações push
+    match /notificacoes_push/{notificacaoId} {
+      // Usuários autenticados podem ler notificações push
+      allow read: if request.auth != null;
+      // Apenas admins podem criar notificações push
+      allow write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de analytics
+    match /analytics/{analyticsId} {
+      // Apenas admins podem ler e escrever analytics
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de configurações de webhook
+    match /webhook_config/{configId} {
+      // Apenas admins podem gerenciar configurações de webhook
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de logs de webhook
+    match /webhook_logs/{logId} {
+      // Apenas admins podem ler e escrever logs de webhook
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de métricas de performance
+    match /performance_metrics/{metricId} {
+      // Apenas admins podem ler e escrever métricas de performance
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de alertas do sistema
+    match /system_alerts/{alertId} {
+      // Apenas admins podem ler e escrever alertas do sistema
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de configurações de cron jobs
+    match /cron_config/{configId} {
+      // Apenas admins podem gerenciar configurações de cron jobs
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de histórico de execução de cron jobs
+    match /cron_execution_history/{executionId} {
+      // Apenas admins podem ler e escrever histórico de cron jobs
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de templates de e-mail
+    match /email_templates/{templateId} {
+      // Apenas admins podem gerenciar templates de e-mail
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de histórico de e-mails enviados
+    match /email_history/{emailId} {
+      // Apenas admins podem ler e escrever histórico de e-mails
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de configurações de monitoramento
+    match /monitoring_config/{configId} {
+      // Apenas admins podem gerenciar configurações de monitoramento
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+    
+    // Coleção de eventos de monitoramento
+    match /monitoring_events/{eventId} {
+      // Apenas admins podem ler e escrever eventos de monitoramento
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.admin == true;
+    }
+  }
+} 

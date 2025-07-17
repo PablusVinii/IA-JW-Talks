@@ -1,0 +1,213 @@
+{
+  "cronJobs": {
+    "backupAutomatico": {
+      "enabled": true,
+      "schedule": "0 2 * * *",
+      "description": "Backup automático diário às 2h da manhã",
+      "actions": [
+        "backup_firestore",
+        "backup_usuarios",
+        "backup_esbocos",
+        "backup_logs"
+      ]
+    },
+    "limpezaDados": {
+      "enabled": true,
+      "schedule": "0 3 * * 0",
+      "description": "Limpeza semanal de dados antigos aos domingos às 3h",
+      "actions": [
+        "limpar_logs_antigos",
+        "limpar_cache_expirado",
+        "limpar_notificacoes_antigas"
+      ],
+      "config": {
+        "diasRetencaoLogs": 90,
+        "diasRetencaoCache": 30,
+        "diasRetencaoNotificacoes": 60
+      }
+    },
+    "relatoriosPeriodicos": {
+      "enabled": true,
+      "schedule": "0 8 * * 1",
+      "description": "Relatórios semanais às segundas às 8h",
+      "actions": [
+        "gerar_relatorio_semanal",
+        "enviar_relatorio_admin",
+        "atualizar_metricas"
+      ]
+    },
+    "verificacaoIntegridade": {
+      "enabled": true,
+      "schedule": "0 */6 * * *",
+      "description": "Verificação de integridade a cada 6 horas",
+      "actions": [
+        "verificar_usuarios",
+        "verificar_esbocos",
+        "verificar_logs",
+        "verificar_backups"
+      ]
+    },
+    "notificacoesAutomaticas": {
+      "enabled": true,
+      "schedule": "0 9 * * *",
+      "description": "Notificações automáticas diárias às 9h",
+      "actions": [
+        "notificar_usuarios_inativos",
+        "notificar_admins_sistema",
+        "enviar_lembretes"
+      ]
+    },
+    "analyticsDiario": {
+      "enabled": true,
+      "schedule": "0 1 * * *",
+      "description": "Análise diária de analytics à 1h da manhã",
+      "actions": [
+        "calcular_metricas_diarias",
+        "gerar_previsoes",
+        "detectar_anomalias"
+      ]
+    }
+  },
+  "webhooks": {
+    "novoUsuario": {
+      "enabled": false,
+      "url": "https://api.exemplo.com/webhook/novo-usuario",
+      "headers": {
+        "Authorization": "Bearer token",
+        "Content-Type": "application/json"
+      },
+      "events": ["usuario_criado", "usuario_verificado"]
+    },
+    "novoEsboco": {
+      "enabled": false,
+      "url": "https://api.exemplo.com/webhook/novo-esboco",
+      "headers": {
+        "Authorization": "Bearer token",
+        "Content-Type": "application/json"
+      },
+      "events": ["esboco_criado", "esboco_editado"]
+    },
+    "erroSistema": {
+      "enabled": true,
+      "url": "https://api.exemplo.com/webhook/erro-sistema",
+      "headers": {
+        "Authorization": "Bearer token",
+        "Content-Type": "application/json"
+      },
+      "events": ["erro_critico", "erro_performance", "erro_seguranca"]
+    }
+  },
+  "notificacoes": {
+    "email": {
+      "enabled": false,
+      "smtp": {
+        "host": "smtp.gmail.com",
+        "port": 587,
+        "secure": true,
+        "auth": {
+          "user": "admin@ia-jw-talks.com",
+          "pass": "app_password"
+        }
+      },
+      "from": "IA-JW-Talks <admin@ia-jw-talks.com>",
+      "templates": {
+        "relatorio_semanal": "templates/relatorio-semanal.html",
+        "notificacao_admin": "templates/notificacao-admin.html",
+        "lembrete_usuario": "templates/lembrete-usuario.html"
+      }
+    },
+    "push": {
+      "enabled": false,
+      "fcm": {
+        "serverKey": "your_fcm_server_key",
+        "projectId": "ia-jw-44d10"
+      },
+      "topics": {
+        "admin": "admin_notifications",
+        "usuarios": "user_notifications",
+        "sistema": "system_notifications"
+      }
+    }
+  },
+  "monitoramento": {
+    "performance": {
+      "enabled": true,
+      "thresholds": {
+        "tempoResposta": 2000,
+        "cpuUsage": 80,
+        "memoryUsage": 85,
+        "diskUsage": 90
+      },
+      "alerts": {
+        "email": true,
+        "push": true,
+        "webhook": true
+      }
+    },
+    "seguranca": {
+      "enabled": true,
+      "checks": [
+        "login_falhas",
+        "tentativas_bruteforce",
+        "acessos_nao_autorizados",
+        "dados_sensiveis"
+      ],
+      "alerts": {
+        "email": true,
+        "push": true,
+        "webhook": true
+      }
+    }
+  },
+  "backup": {
+    "firestore": {
+      "enabled": true,
+      "schedule": "0 2 * * *",
+      "retention": {
+        "diario": 7,
+        "semanal": 4,
+        "mensal": 12
+      },
+      "storage": {
+        "type": "gcs",
+        "bucket": "ia-jw-talks-backups",
+        "path": "firestore/"
+      }
+    },
+    "usuarios": {
+      "enabled": true,
+      "schedule": "0 2 * * *",
+      "format": "json",
+      "encryption": true
+    },
+    "esbocos": {
+      "enabled": true,
+      "schedule": "0 2 * * *",
+      "format": "json",
+      "compression": true
+    }
+  },
+  "analytics": {
+    "coleta": {
+      "enabled": true,
+      "interval": 300,
+      "metrics": [
+        "usuarios_ativos",
+        "esbocos_criados",
+        "tempo_sessao",
+        "erros_sistema",
+        "performance_api"
+      ]
+    },
+    "armazenamento": {
+      "type": "firestore",
+      "collection": "analytics",
+      "retention": 365
+    },
+    "relatorios": {
+      "automaticos": true,
+      "frequencia": "semanal",
+      "destinatarios": ["admin@ia-jw-talks.com"]
+    }
+  }
+} 

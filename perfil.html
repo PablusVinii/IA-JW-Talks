@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil do Usuário</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div class="container" style="max-width: 600px; margin: 40px auto; background: rgba(255,255,255,0.97); border-radius: 16px; box-shadow: 0 4px 32px rgba(0,0,0,0.08); padding: 40px 24px;">
+        <h1 style="margin-bottom: 24px;">👤 Meu Perfil</h1>
+        <form id="formPerfil">
+            <div class="form-group">
+                <label for="perfilNome">Nome</label>
+                <input type="text" id="perfilNome" name="perfilNome" required />
+            </div>
+            <div class="form-group">
+                <label for="perfilEmail">E-mail</label>
+                <input type="email" id="perfilEmail" name="perfilEmail" required disabled />
+            </div>
+            <div class="form-group">
+                <label for="perfilSenha">Nova Senha (opcional)</label>
+                <input type="password" id="perfilSenha" name="perfilSenha" placeholder="Deixe em branco para não alterar" minlength="6" />
+            </div>
+            <button type="submit" class="btn">Salvar Alterações</button>
+        </form>
+        <div id="msgPerfil" style="margin-top: 18px;"></div>
+        <hr style="margin: 32px 0;">
+        <h2 style="font-size:1.2em; margin-bottom: 12px;">📊 Estatísticas</h2>
+        <ul style="list-style:none; padding:0;">
+            <li><strong>Total de esboços:</strong> <span id="statTotal"></span></li>
+            <li><strong>Último esboço:</strong> <span id="statUltimo"></span></li>
+            <li><strong>Último acesso:</strong> <span id="statAcesso"></span></li>
+        </ul>
+        <a href="index.html" class="btn" style="margin-top:32px;display:inline-block;">← Voltar</a>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script>
+    const form = document.getElementById('formPerfil');
+    const msg = document.getElementById('msgPerfil');
+    let usuarioAtual = null;
+    const nomeInput = document.getElementById('perfilNome');
+    const emailInput = document.getElementById('perfilEmail');
+    const statTotal = document.getElementById('statTotal');
+    const statUltimo = document.getElementById('statUltimo');
+    const statAcesso = document.getElementById('statAcesso');
+    
+    // Mostrar mensagem de carregando
+    nomeInput.value = 'Carregando...';
+    emailInput.value = 'Carregando...';
+    statTotal.textContent = 'Carregando...';
+    statUltimo.textContent = 'Carregando...';
+    statAcesso.textContent = 'Carregando...';
+
+    // Proteger página: só logado
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+        usuarioAtual = user;
+        // Buscar dados do Firestore
+        try {
+            const doc = await firebase.firestore().collection('usuarios').doc(user.uid).get();
+            console.log('DEBUG Firestore usuario:', doc.exists, doc.data());
+            if (doc.exists) {
+                const dados = doc.data();
+                nomeInput.value = dados.nome || user.displayName || '';
+                emailInput.value = dados.email || user.email || '';
+            } else {
+                nomeInput.value = user.displayName || '';
+                emailInput.value = user.email || '';
+            }
+            msg.textContent = '';
+            msg.style.color = '';
+        } catch (e) {
+            console.error('Erro ao buscar dados do Firestore:', e);
+            nomeInput.value = user.displayName || '';
+            emailInput.value = user.email || '';
+            msg.textContent = 'Não foi possível carregar os dados do perfil do banco de dados.';
+            msg.style.color = 'red';
+        }
+        // Último acesso
+        statAcesso.textContent = user.metadata && user.metadata.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleString('pt-BR') : 'N/A';
+        // Estatísticas
+        carregarEstatisticas(user.uid);
+    });
+
+    // Estatísticas
+    async function carregarEstatisticas(uid) {
+        try {
+            const snap = await firebase.firestore().collection('esbocos').where('uid', '==', uid).orderBy('criadoEm', 'desc').get();
+            console.log('DEBUG Firestore esbocos:', snap.size, snap.docs.map(d=>d.data()));
+            statTotal.textContent = snap.size;
+            if (!snap.empty) {
+                const ultimo = snap.docs[0].data();
+                statUltimo.textContent = ultimo.criadoEm && ultimo.criadoEm.toDate ? ultimo.criadoEm.toDate().toLocaleString('pt-BR') : 'N/A';
+            } else {
+                statUltimo.textContent = 'N/A';
+            }
+        } catch (e) {
+            console.error('Erro ao buscar esbocos:', e);
+            statTotal.textContent = 'Erro';
+            statUltimo.textContent = 'Erro';
+            msg.textContent = 'Não foi possível carregar as estatísticas do banco de dados.';
+            msg.style.color = 'red';
+        }
+    }
+
+    // Salvar alterações
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        msg.textContent = '';
+        const nome = document.getElementById('perfilNome').value.trim();
+        const senha = document.getElementById('perfilSenha').value.trim();
+        try {
+            if (nome && nome !== usuarioAtual.displayName) {
+                await usuarioAtual.updateProfile({ displayName: nome });
+                await firebase.firestore().collection('usuarios').doc(usuarioAtual.uid).set({ 
+                    nome, 
+                    email: usuarioAtual.email 
+                }, { merge: true });
+            }
+            if (senha) {
+                await usuarioAtual.updatePassword(senha);
+            }
+            msg.textContent = 'Alterações salvas com sucesso!';
+            msg.style.color = 'green';
+        } catch (err) {
+            msg.textContent = 'Erro: ' + (err.message || err);
+            msg.style.color = 'red';
+        }
+    };
+    </script>
+</body>
+</html> 

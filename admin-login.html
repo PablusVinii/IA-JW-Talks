@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+        body { background: var(--gradient-secondary, #f093fb); }
+        .admin-login-container { max-width: 400px; margin: 80px auto; background: rgba(255,255,255,0.98); border-radius: 16px; box-shadow: 0 4px 32px rgba(0,0,0,0.10); padding: 40px 24px; }
+        .admin-login-container h1 { text-align: center; margin-bottom: 24px; }
+        .admin-login-container .form-group { margin-bottom: 18px; }
+        .admin-login-container label { display: block; margin-bottom: 6px; font-weight: 500; }
+        .admin-login-container input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 1em; }
+        .admin-login-container button { width: 100%; background: var(--primary-color, #4a90e2); color: #fff; border: none; border-radius: 8px; padding: 12px; font-weight: 600; font-size: 1em; cursor: pointer; margin-top: 10px; }
+        .admin-login-container button:hover { background: var(--primary-dark, #357abd); }
+        .admin-login-container .msg { margin-top: 16px; text-align: center; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="admin-login-container">
+        <h1>🔒 Login Admin</h1>
+        <form id="formAdminLogin">
+            <div class="form-group">
+                <label for="adminEmail">E-mail</label>
+                <input type="email" id="adminEmail" required autocomplete="username" />
+            </div>
+            <div class="form-group">
+                <label for="adminSenha">Senha</label>
+                <input type="password" id="adminSenha" required autocomplete="current-password" />
+            </div>
+            <button type="submit">Entrar</button>
+        </form>
+        <div class="msg" id="msgAdminLogin"></div>
+        <a href="index.html" style="display:block;text-align:center;margin-top:18px;">← Voltar ao sistema</a>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script>
+    const form = document.getElementById('formAdminLogin');
+    const msg = document.getElementById('msgAdminLogin');
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        msg.textContent = '';
+        const email = document.getElementById('adminEmail').value.trim();
+        const senha = document.getElementById('adminSenha').value;
+        try {
+            const cred = await firebase.auth().signInWithEmailAndPassword(email, senha);
+            // Verificar se é admin
+            const doc = await firebase.firestore().collection('usuarios').doc(cred.user.uid).get();
+            if (doc.exists && doc.data().admin) {
+                msg.textContent = 'Acesso liberado! Redirecionando...';
+                msg.style.color = 'green';
+                setTimeout(() => { window.location.href = 'admin.html'; }, 1000);
+            } else {
+                msg.textContent = 'Acesso negado: você não é administrador.';
+                msg.style.color = 'red';
+                await firebase.auth().signOut();
+            }
+        } catch (error) {
+            msg.textContent = 'Erro: ' + (error.code || error.message || error);
+            msg.style.color = 'red';
+            console.error('Erro no login:', error);
+        }
+    };
+    // Se já estiver logado e for admin, redireciona direto
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            const doc = await firebase.firestore().collection('usuarios').doc(user.uid).get();
+            if (doc.exists && doc.data().admin) {
+                window.location.href = 'admin.html';
+            }
+        }
+    });
+    </script>
+</body>
+</html> 

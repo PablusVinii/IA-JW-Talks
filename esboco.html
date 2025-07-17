@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar Esboço</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body style="background: var(--gradient-primary); min-height: 100vh;">
+    <div class="container" style="max-width: 700px; margin: 40px auto; background: rgba(255,255,255,0.97); border-radius: 16px; box-shadow: 0 4px 32px rgba(0,0,0,0.08); padding: 40px 24px;">
+        <h1 id="tituloEsboco" style="font-size:2rem; margin-bottom: 10px;">Esboço</h1>
+        <p id="tipoEsboco" style="color: var(--primary-color); font-weight: 500; margin-bottom: 20px;"></p>
+        <div id="infoEsboco" style="color: #666; font-size: 0.95em; margin-bottom: 24px;"></div>
+        <div id="conteudoEsboco" style="background: #f9f9f9; border-radius: 8px; padding: 24px; font-size: 1.1em; line-height: 1.7; margin-bottom: 32px;"></div>
+        <button id="btnFavoritar" class="btn" style="background: var(--gradient-secondary);">⭐ Favoritar</button>
+        <div id="mensagem" style="margin-top: 18px; color: var(--primary-color);"></div>
+    </div>
+    <footer class="footer">
+        <p>Gerador de Esboços - <a href="index.html">Voltar ao site</a></p>
+    </footer>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Utilitário para obter parâmetro da URL
+    function getParam(name) {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(name);
+    }
+    const esbocoId = getParam('id');
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const btnFavoritar = document.getElementById('btnFavoritar');
+    const mensagem = document.getElementById('mensagem');
+    const tituloEsboco = document.getElementById('tituloEsboco');
+    const tipoEsboco = document.getElementById('tipoEsboco');
+    const infoEsboco = document.getElementById('infoEsboco');
+    const conteudoEsboco = document.getElementById('conteudoEsboco');
+
+    async function carregarEsboco() {
+        if (!esbocoId) {
+            conteudoEsboco.innerHTML = '<span style="color:red">ID do esboço não informado.</span>';
+            btnFavoritar.style.display = 'none';
+            return;
+        }
+        try {
+            const doc = await db.collection('esbocos').doc(esbocoId).get();
+            console.log('Doc carregado:', doc.exists, doc.data());
+            if (!doc.exists) {
+                conteudoEsboco.innerHTML = '<span style="color:red">Esboço não encontrado.</span>';
+                btnFavoritar.style.display = 'none';
+                return;
+            }
+            const data = doc.data();
+            console.log('Preenchendo elementos:', tituloEsboco, tipoEsboco, infoEsboco, conteudoEsboco);
+            tituloEsboco.textContent = data.tema || 'Esboço';
+            tipoEsboco.textContent = formatarTipoDiscurso(data.tipoDiscurso);
+            infoEsboco.textContent = data.criadoEm && data.criadoEm.toDate ? 'Criado em: ' + data.criadoEm.toDate().toLocaleString('pt-BR') : '';
+            conteudoEsboco.innerHTML = formatarNegrito(data.conteudo || '');
+        } catch (err) {
+            conteudoEsboco.innerHTML = '<span style="color:red">Erro ao carregar esboço.</span>';
+            btnFavoritar.style.display = 'none';
+        }
+    }
+
+    function formatarTipoDiscurso(tipo) {
+        const tipos = {
+            'estudante': 'Estudante',
+            'anciao': 'Ancião',
+            'servo': 'Servo Ministerial',
+            'publico': 'Discurso Público',
+            'assembleia': 'Assembleia',
+            'pesquisa': 'Pesquisa Bíblica Profunda',
+            'tesouros': 'Tesouros da Palavra de Deus'
+        };
+        return tipos[tipo] || tipo;
+    }
+    function formatarNegrito(texto) {
+        return (texto||'')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\\n/g, '<br>')
+            .replace(/\n/g, '<br>');
+    }
+
+    btnFavoritar.onclick = async function() {
+        mensagem.textContent = '';
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                localStorage.setItem('redirectAfterLogin', window.location.href);
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                await db.collection('esbocos').doc(esbocoId).update({ favorito: true });
+                mensagem.textContent = 'Esboço favoritado! Acesse seu histórico no painel principal.';
+            } catch (err) {
+                mensagem.textContent = 'Erro ao favoritar: ' + (err.message || err);
+            }
+        });
+    };
+
+    carregarEsboco();
+    });
+    </script>
+</body>
+</html> 
