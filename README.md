@@ -2,6 +2,8 @@
 
 Este projeto é uma aplicação web front-end projetada para auxiliar as Testemunhas de Jeová na preparação de discursos para suas reuniões. A ferramenta permite gerar esboços automáticos baseados em temas e tipos de discurso, buscando informações relevantes e organizando-as de forma prática. Esta versão integra autenticação de usuários e armazenamento de histórico de esboços utilizando Firebase.
 
+Edição 2.0 
+
 ## ✨ Funcionalidades Principais
 
 -   **Autenticação de Usuários (Firebase Authentication):**
