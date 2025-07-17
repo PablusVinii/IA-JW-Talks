@@ -88,11 +88,11 @@ function gerarEsboco() {
         // Limpa lista de pontos
         if (elementos.pontosList) elementos.pontosList.innerHTML = '';
 
-        // Exibe o texto completo do esboço
+        // Exibe o texto completo do esboço, com formatação
         if (elementos.referenciasList) {
             elementos.referenciasList.innerHTML = '';
             const pre = document.createElement('pre');
-            pre.textContent = data.output || '';
+            pre.innerHTML = formatarConteudo(data.output || '');
             elementos.referenciasList.appendChild(pre);
         }
 
@@ -137,6 +137,66 @@ function gerarEsboco() {
             elementos.errorMessage.textContent = err.message || 'Erro ao gerar esboço.';
             elementos.errorMessage.style.display = 'block';
         }
+    });
+}
+
+function formatarConteudo(texto) {
+    if (!texto) return '';
+    // Substitui **texto** por <strong>texto</strong> para renderizar como negrito.
+    // A flag 'g' garante que todas as ocorrências sejam substituídas.
+    return texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+}
+
+function baixarComoWord() {
+    const titulo = elementos.resultTitle ? elementos.resultTitle.textContent : 'Esboco';
+    const conteudo = elementos.referenciasList ? elementos.referenciasList.textContent : '';
+
+    if (!conteudo) {
+        alert('Não há esboço gerado para baixar.');
+        return;
+    }
+
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>${titulo}</title>
+            <style>
+                body { font-family: 'Times New Roman', Times, serif; }
+                pre { white-space: pre-wrap; font-family: inherit; }
+            </style>
+        </head>
+        <body>
+            <h1>${titulo}</h1>
+            <pre>${conteudo}</pre>
+        </body>
+        </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'application/msword' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${titulo.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+}
+
+function exportarResultado() {
+    const conteudo = elementos.referenciasList ? elementos.referenciasList.textContent : '';
+
+    if (!conteudo) {
+        alert('Não há esboço gerado para copiar.');
+        return;
+    }
+
+    navigator.clipboard.writeText(conteudo).then(() => {
+        alert('Texto do esboço copiado para a área de transferência!');
+    }).catch(err => {
+        console.error('Erro ao copiar texto: ', err);
+        alert('Não foi possível copiar o texto. Tente novamente.');
     });
 }
 
@@ -384,7 +444,7 @@ class GeradorEsboco {
                     <strong>Tempo:</strong> ${data.tempo || 'Não especificado'} minutos
                 </div>
                 <div style="background:#f9f9f9;border-radius:8px;padding:20px;margin-bottom:20px;white-space:pre-wrap;line-height:1.6;">
-                    ${data.conteudo || 'Conteúdo não disponível'}                </div>
+                    ${formatarConteudo(data.conteudo || 'Conteúdo não disponível')}                </div>
                 <div style="text-align:right;">
                     <button onclick="navigator.clipboard.writeText('${data.conteudo || ''}').then(() => alert('Copiado!'))" class="btn" style="margin-right:10px;">📋 Copiar</button>
                     <button onclick="window.geradorEsboco.exportarEsboco('${data.tema || 'Esboço'}, '${data.conteudo || ''}')">⬇️ Exportar</button>
