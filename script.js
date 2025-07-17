@@ -1,7 +1,7 @@
 // Configurações da API
 // Firebase auth e db são inicializados em firebase-init.js e estão disponíveis globalmente.
 // ATENÇÃO: Esta URL deve ser configurada para o ambiente de produção.
-const API_URL = 'https://web-production-8bcb.up.railway.app/';
+const API_URL = 'https://web-production-8bcb.up.railway.app/gerar-discurso';
 
 
 // Elementos DOM utilizados na aplicação, mapeados para fácil acesso
