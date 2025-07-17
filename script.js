@@ -141,7 +141,7 @@ function gerarEsboco() {
 }
 
 // Configurações da API
-const API_URL = 'https://primary-production-5b08.up.railway.app/gerar-discurso';
+const API_URL = 'https://primary-production-5b08.up.railway.app/webhook/fd061969-eb2c-4355-89da-910ec299d4ef';
 
 const elementos = {
     tipoDiscurso: document.getElementById('tipoDiscurso'),
