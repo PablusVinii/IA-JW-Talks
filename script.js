@@ -388,6 +388,7 @@ class GeradorEsboco {
         try {
             const query = db.collection("esbocos")
                 .where("uid", "==", uid)
+                .orderBy("favorito", "desc")
                 .orderBy("criadoEm", "desc")
                 .limit(10);
                 
@@ -714,16 +715,25 @@ class GeradorEsboco {
                 .limit(10)
                 .get();
 
-            // Combinar as duas consultas
+            // Buscar IDs de notificações que o usuário ocultou
+            const snapshotOcultas = await db.collection('usuarios').doc(uid).collection('notificacoesOcultas').get();
+            const idsOcultos = snapshotOcultas.docs.map(doc => doc.id);
+
+            // Combinar as duas consultas e filtrar as ocultas
             const todasNotificacoes = [];
-            // Adicionar notificações específicas
+
+            // Adicionar notificações específicas (se não estiverem ocultas)
             snapshotEspecificas.docs.forEach(doc => {
-                todasNotificacoes.push({ id: doc.id, ...doc.data() });
+                if (!idsOcultos.includes(doc.id)) {
+                    todasNotificacoes.push({ id: doc.id, ...doc.data() });
+                }
             });
             
-            // Adicionar notificações gerais
+            // Adicionar notificações gerais (se não estiverem ocultas)
             snapshotGerais.docs.forEach(doc => {
-                todasNotificacoes.push({ id: doc.id, ...doc.data() });
+                if (!idsOcultos.includes(doc.id)) {
+                    todasNotificacoes.push({ id: doc.id, ...doc.data() });
+                }
             });
 
             if (todasNotificacoes.length === 0) {
@@ -951,11 +961,23 @@ class GeradorEsboco {
                     <strong>Por:</strong> ${notificacao.admin || 'Sistema'}<br>
                     ${notificacao.geral && notificacao.totalDestinatarios ? `<strong>Para:</strong> ${notificacao.totalDestinatarios} usuários<br>` : ''}
                     <strong>Status:</strong> ${notificacao.lida ? 'Lida' : 'Não lida'}                </div>
-                ${notificacao.link ? `<a href="${notificacao.link}" target="_blank" class="btn" style="text-decoration:none;">🔗 Ver mais</a>` : ''}
+                <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                    ${notificacao.link ? `<a href="${notificacao.link}" target="_blank" class="btn" style="text-decoration:none;">🔗 Ver mais</a>` : ''}
+                    <button id="btnExcluirNotificacao" class="btn" style="background:#dc3545;color:white;border:none;">🗑️ Apagar</button>
+                </div>
             </div>
         `;
 
         document.body.appendChild(modal);
+
+        // Adicionar evento de clique no botão de apagar
+        const btnExcluir = modal.querySelector('#btnExcluirNotificacao');
+        if (btnExcluir) {
+            btnExcluir.addEventListener('click', () => {
+                modal.remove(); // Fecha o modal antes de apagar
+                this.excluirNotificacao(notificacao.id);
+            });
+        }
         
         // Fechar ao clicar fora
         modal.addEventListener('click', (e) => {
@@ -963,6 +985,34 @@ class GeradorEsboco {
                 modal.remove();
             }
         });
+    }
+
+    // Excluir (ocultar) uma notificação para o usuário
+    async excluirNotificacao(notifId) {
+        if (!notifId) return;
+
+        const confirmacao = confirm('Tem certeza que deseja apagar esta notificação?\n\nEla não aparecerá mais para você.');
+        if (confirmacao) {
+            try {
+                const user = this.usuarioAtual;
+                if (!user) {
+                    alert('Usuário não autenticado.');
+                    return;
+                }
+
+                // Adiciona o ID da notificação a uma subcoleção para "ocultá-la"
+                await db.collection('usuarios').doc(user.uid).collection('notificacoesOcultas').doc(notifId).set({
+                    ocultaEm: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                alert('Notificação apagada com sucesso.');
+                await this.carregarNotificacoes(user.uid);
+
+            } catch (error) {
+                console.error('Erro ao apagar notificação:', error);
+                alert('Ocorreu um erro ao apagar a notificação.');
+            }
+        }
     }
 
     // Logout
