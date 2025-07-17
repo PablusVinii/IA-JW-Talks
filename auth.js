@@ -55,23 +55,6 @@ function setupCadastroForm() {
             if (btnCadastro) btnCadastro.disabled = show;
         }
 
-        function validateForm(nome, sobrenome, email, senha) {
-            if (!nome || !sobrenome) {
-                showMessage("Por favor, preencha o nome e sobrenome", "error");
-                return false;
-            }
-            if (senha.length < 6) {
-                showMessage("A senha deve ter pelo menos 6 caracteres", "error");
-                return false;
-            }
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showMessage("Por favor, insira um email válido", "error");
-                return false;
-            }
-            return true;
-        }
-
         formCadastro.addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -80,16 +63,25 @@ function setupCadastroForm() {
                 return;
             }
 
-            const nome = document.getElementById("nome").value.trim();
-            const sobrenome = document.getElementById("sobrenome").value.trim();
+            const nomeCompleto = document.getElementById("nome").value.trim(); // Modificado
             const email = document.getElementById("email").value.trim();
             const senha = document.getElementById("senha").value;
 
-            if (!validateForm(nome, sobrenome, email, senha)) {
+            // Validação simplificada sem sobrenome
+            if (!nomeCompleto) {
+                showMessage("Por favor, preencha o seu nome completo", "error");
+                return;
+            }
+            if (senha.length < 6) {
+                showMessage("A senha deve ter pelo menos 6 caracteres", "error");
+                return;
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage("Por favor, insira um email válido", "error");
                 return;
             }
 
-            const nomeCompleto = `${nome} ${sobrenome}`;
             showLoading(true);
             if(msgCadastro) msgCadastro.style.display = 'none';
 

@@ -3,34 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cadastro de Usuário</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <title>Cadastro - Gerador de Esboços</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="auth.css">
-  <link rel="stylesheet" href="utils.css">
 </head>
 <body>
-  <div class="container">
-    <h2>Cadastrar Conta</h2>
-    <form id="form-cadastro">
-      <label for="nome" class="visually-hidden">Nome</label>
-      <input type="text" id="nome" placeholder="Nome" required />
-      <label for="sobrenome" class="visually-hidden">Sobrenome</label>
-      <input type="text" id="sobrenome" placeholder="Sobrenome" required />
-      <label for="email" class="visually-hidden">Email</label>
-      <input type="email" id="email" placeholder="Email" required />
-      <label for="senha" class="visually-hidden">Senha</label>
-      <input type="password" id="senha" placeholder="Senha (mínimo 6 caracteres)" required minlength="6" />
-      <button type="submit" id="btn-cadastro">Cadastrar</button>
-    </form>
+  <div class="auth-wrapper">
+    <div class="auth-container">
+      
+      <div class="auth-form">
+        <h2 class="auth-title">Crie sua Conta</h2>
+        <p class="auth-subtitle">Junte-se a nós e simplifique sua preparação de discursos.</p>
+        
+        <form id="form-cadastro">
+          <div class="form-group">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" placeholder="Seu nome completo" required />
+          </div>
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" placeholder="seuemail@exemplo.com" required />
+          </div>
+          <div class="form-group">
+            <label for="senha">Senha</label>
+            <input type="password" id="senha" placeholder="Mínimo de 6 caracteres" required minlength="6" />
+          </div>
+          <button type="submit" id="btn-cadastro" class="btn btn-primary">Criar Conta</button>
+        </form>
+        
+        <div class="loading" id="loading" role="status" aria-live="polite" style="display: none; text-align: center; margin-top: 15px;">
+          Processando...
+        </div>
+        <div class="msg" id="mensagem" role="alert"></div>
+        
+        <div class="auth-links">
+          <a href="login.html">Já tenho uma conta</a>
+        </div>
+      </div>
 
-    <div class="loading" id="loading" role="status" aria-live="polite">
-      <div class="spinner" aria-hidden="true"></div>
-      Processando...
+      <div class="auth-features">
+        <h3 class="features-title">📖 Gerador de Esboços</h3>
+        <ul>
+          <li><strong>Geração Inteligente:</strong> Crie esboços coesos em minutos.</li>
+          <li><strong>Histórico na Nuvem:</strong> Salve e acesse seus esboços de qualquer lugar.</li>
+          <li><strong>Organização Simples:</strong> Marque favoritos e encontre tudo facilmente.</li>
+          <li><strong>Baseado na JW.org:</strong> Conteúdo relevante e confiável para suas pesquisas.</li>
+        </ul>
+        <a href="home.html" class="home-link">Saber mais sobre o projeto &rarr;</a>
+      </div>
+
     </div>
-
-    <div class="msg" id="mensagem" role="alert"></div>
-    
-    <a href="login.html" class="btn-link-style btn-secondary">Já tenho cadastro</a>
   </div>
 
   <!-- Firebase SDK -->

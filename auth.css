@@ -1,131 +1,210 @@
-/* Estilos para login.html e cadastro.html */
+/* Estilos Globais de Autenticação */
+:root {
+  --primary-color: #3498db;
+  --primary-dark: #2980b9;
+  --background-light: #f4f7f6;
+  --text-dark: #2c3e50;
+  --text-light: #7f8c8d;
+  --border-color: #e1e5e9;
+  --white: #ffffff;
+  --error-color: #e74c3c;
+  --success-color: #2ecc71;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Inter', sans-serif;
 }
 
 body {
-  background: linear-gradient(to right, #667eea, #764ba2); /* Mesmo gradiente do style.css global */
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background-light);
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 1rem; /* Para evitar que o container encoste nas bordas em telas pequenas */
+  padding: 20px;
 }
 
-.container {
-  background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  max-width: 400px;
+/* Layout Principal */
+.auth-wrapper {
   width: 100%;
+  max-width: 900px;
 }
 
-h2 {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  color: #333; /* --text-primary do style.css é #2c3e50, este é um pouco mais claro */
+.auth-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: var(--white);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-input[type="email"],
-input[type="password"],
-input[type="text"] {
+/* Lado do Formulário */
+.auth-form {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  color: var(--text-light);
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+.form-group input {
   width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc; /* --border-color do style.css é #e9ecef */
-  border-radius: 0.5rem; /* --border-radius do style.css é 12px, este é menor */
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-input[type="email"]:focus,
-input[type="password"]:focus,
-input[type="text"]:focus {
+.form-group input:focus {
   outline: none;
-  border-color: #5a67d8; /* Similar ao --primary-color do style.css #4a90e2 */
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
 }
 
-button, .btn-link-style {
+.btn {
   width: 100%;
-  padding: 0.75rem;
-  background-color: #5a67d8; /* Cor primária para botões */
+  padding: 14px;
   border: none;
-  color: white;
-  font-weight: bold;
+  border-radius: 8px;
   font-size: 1rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-bottom: 1rem;
-  text-decoration: none; /* Para <a> estilizado como botão */
-  display: inline-block; /* Para <a> estilizado como botão */
-  text-align: center; /* Para <a> estilizado como botão */
-}
-
-button:hover, .btn-link-style:hover {
-  background-color: #434190; /* Tom mais escuro da cor primária */
-}
-
-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: transparent;
-  border: 2px solid #5a67d8;
-  color: #5a67d8;
-  margin-bottom: 0;
-}
-
-.btn-secondary:hover {
-  background-color: #5a67d8;
-  color: white;
-}
-
-.msg {
-  margin-top: 1rem;
-  text-align: center;
   font-weight: 600;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  display: none; /* Controlado por JS */
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
-.msg.success {
-  background-color: #d4edda; /* Similar ao --success-color com opacidade */
-  color: #155724;
-  border: 1px solid #c3e6cb;
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+.auth-links {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.9rem;
+}
+
+.auth-links a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-links a:hover {
+  text-decoration: underline;
+}
+
+.auth-links span {
+  color: var(--border-color);
+  margin: 0 10px;
+}
+
+/* Lado das Features */
+.auth-features {
+  background: linear-gradient(135deg, #eaf2f8, #d3e0ea);
+  padding: 40px;
+  color: var(--text-dark);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.features-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.auth-features ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 30px;
+}
+
+.auth-features li {
+  padding-left: 25px;
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.auth-features li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.home-link {
+  color: var(--text-dark);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.home-link:hover {
+  color: var(--primary-color);
+}
+
+/* Mensagens de Feedback */
+.msg {
+  text-align: center;
+  font-weight: 500;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 15px;
+  display: none;
 }
 
 .msg.error {
-  background-color: #f8d7da; /* Similar ao --error-color com opacidade */
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: #fbeae9;
+  color: var(--error-color);
 }
 
-.loading {
-  display: none; /* Controlado por JS */
-  text-align: center;
-  margin-top: 1rem;
+.msg.success {
+  background-color: #eaf7ed;
+  color: var(--success-color);
 }
 
-.spinner {
-  border: 2px solid #f3f3f3; /* Cor de fundo do spinner */
-  border-top: 2px solid #5a67d8; /* Cor primária do spinner */
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 1s linear infinite;
-  display: inline-block;
-  margin-right: 0.5rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Responsividade */
+@media (max-width: 768px) {
+  .auth-container {
+    grid-template-columns: 1fr;
+  }
+  .auth-features {
+    display: none; /* Esconde a seção de features em telas pequenas */
+  }
+  .auth-form {
+    padding: 30px;
+  }
 }
