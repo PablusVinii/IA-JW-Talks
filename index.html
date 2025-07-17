@@ -11,7 +11,10 @@
 </head>
 <body>
     <!-- Menu Button -->
-    <button onclick="abrirMenu()" class="menu-btn" aria-label="Abrir menu">☰</button>
+    <div class="menu-container">
+        <button onclick="abrirMenu()" class="menu-btn" aria-label="Abrir menu">☰</button>
+        <span id="menuNotificacaoBadge" class="notification-badge" style="display: none;"></span>
+    </div>
 
     <!-- Sidebar -->
     <aside id="sidebar" class="sidebar">
