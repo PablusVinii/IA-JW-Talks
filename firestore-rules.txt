@@ -7,6 +7,16 @@ service cloud.firestore {
     
     // === COLEÇÕES PRINCIPAIS ===
     
+    // Permitir que um usuário gerencie suas próprias notificações ocultas
+    match /usuarios/{userId}/notificacoesOcultas/{docId} {
+      allow read, write, delete: if request.auth.uid == userId;
+    }
+
+    // Permitir que um usuário gerencie suas próprias pastas
+    match /usuarios/{userId}/pastas/{pastaId} {
+      allow read, write, delete: if request.auth.uid == userId;
+    }
+    
     // Coleção de usuários - CORRIGIDO
     match /usuarios/{userId} {
       // Qualquer usuário autenticado pode criar seu próprio perfil

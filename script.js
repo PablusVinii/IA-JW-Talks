@@ -168,7 +168,9 @@ async function gerarEsboco() {
                 topicos: topicos,
                 informacoes: informacoes,
                 favorito: false, // Adicionado para garantir que o campo exista na criação
-                criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                pasta: 'Caixa de Entrada', // Novo campo para pastas
+                tags: [] // Novo campo para tags
             }).then(async () => {
                 // Decrementa o limite de esboços para TODOS os usuários
                 await dbInstance.collection('usuarios').doc(user.uid).update({
@@ -312,6 +314,12 @@ class GeradorEsboco {
                 window.location.href = 'login.html';
             }
         });
+
+        // Listener para o botão de gerenciar pastas
+        const btnGerenciar = document.getElementById('btnGerenciarPastas');
+        if (btnGerenciar) {
+            btnGerenciar.addEventListener('click', () => this.gerenciarPastas());
+        }
     }
 
     // Atualizar menu para mostrar/esconder link do admin
@@ -403,7 +411,8 @@ class GeradorEsboco {
             }
             
             this.atualizarMenuAdmin();
-            await this.carregarHistorico(user.uid);
+            await this.carregarPastas(user.uid); // Carrega as pastas primeiro
+            await this.carregarHistorico(user.uid, 'Caixa de Entrada'); // Carrega a caixa de entrada por padrão
             await this.carregarNotificacoes(user.uid);
 
         } catch (error) {
@@ -446,23 +455,91 @@ class GeradorEsboco {
         }
     }
 
+    // Carregar pastas do usuário
+    async carregarPastas(uid) {
+        const filtroPasta = document.getElementById('filtroPasta');
+        if (!filtroPasta) return;
+
+        try {
+            const pastasRef = db.collection('usuarios').doc(uid).collection('pastas');
+            const snapshot = await pastasRef.orderBy("nome", "asc").get();
+
+            if (snapshot.empty) {
+                const batch = db.batch();
+                batch.set(pastasRef.doc(), { nome: 'Caixa de Entrada', criadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+                batch.set(pastasRef.doc(), { nome: 'Arquivo', criadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+                await batch.commit();
+                return this.carregarPastas(uid);
+            }
+
+            filtroPasta.innerHTML = '';
+            snapshot.forEach(doc => {
+                const pasta = doc.data();
+                const option = document.createElement('option');
+                option.value = pasta.nome;
+                option.textContent = pasta.nome;
+                filtroPasta.appendChild(option);
+            });
+
+            filtroPasta.removeEventListener('change', this.filtrarPorPasta.bind(this));
+            filtroPasta.addEventListener('change', this.filtrarPorPasta.bind(this));
+
+        } catch (error) {
+            console.error("Erro ao carregar pastas:", error);
+            filtroPasta.innerHTML = '<option>Erro ao carregar</option>';
+        }
+    }
+
+    filtrarPorPasta(event) {
+        const nomePasta = event.target.value;
+        this.carregarHistorico(this.usuarioAtual.uid, nomePasta);
+    }
+
+    // Gerenciar pastas
+    async gerenciarPastas() {
+        const nomeNovaPasta = prompt("Digite o nome da nova pasta que deseja criar (ou deixe em branco para cancelar):");
+        if (nomeNovaPasta && nomeNovaPasta.trim() !== '') {
+            try {
+                const pastasRef = db.collection('usuarios').doc(this.usuarioAtual.uid).collection('pastas');
+                const snapshot = await pastasRef.where("nome", "==", nomeNovaPasta.trim()).get();
+                if (!snapshot.empty) {
+                    alert("Uma pasta com este nome já existe.");
+                    return;
+                }
+                await pastasRef.add({
+                    nome: nomeNovaPasta.trim(),
+                    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert(`Pasta "${nomeNovaPasta.trim()}" criada com sucesso!`);
+                await this.carregarPastas(this.usuarioAtual.uid);
+            } catch (error) {
+                console.error("Erro ao criar pasta:", error);
+                alert("Não foi possível criar a pasta.");
+            }
+        }
+    }
+
     // Carregar histórico de esboços do usuário
-    async carregarHistorico(uid) {
+    async carregarHistorico(uid, filtroPasta = null) {
         if (!elementos.historicoList) return;
         
         elementos.historicoList.innerHTML = '<li style="color:#666;font-style:italic;">Carregando histórico...</li>';
         
         try {
-            const query = db.collection("esbocos")
-                .where("uid", "==", uid)
-                .orderBy("favorito", "desc")
+            let query = db.collection("esbocos").where("uid", "==", uid);
+
+            if (filtroPasta) {
+                query = query.where("pasta", "==", filtroPasta);
+            }
+
+            query = query.orderBy("favorito", "desc")
                 .orderBy("criadoEm", "desc")
-                .limit(10);
+                .limit(20);
                 
             const snapshot = await query.get();
             elementos.historicoList.innerHTML = '';
             if (snapshot.empty) {
-                elementos.historicoList.innerHTML = '<li style="color:#666;font-style:italic;">Você ainda não gerou esboços.</li>';
+                elementos.historicoList.innerHTML = '<li style="color:#666;font-style:italic;">Nenhum esboço encontrado nesta pasta.</li>';
                 return;
             }
             
@@ -503,6 +580,9 @@ class GeradorEsboco {
                         hour: '2-digit', 
                         minute: '2-digit'
                     }) : 'Data não disponível'}</small>
+                    <div class="tags-container" style="margin-top: 5px;">
+                        ${(data.tags && data.tags.length) ? data.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
+                    </div>
                 `;
                 info.style.flex = '1';
                 
@@ -591,7 +671,13 @@ class GeradorEsboco {
                 <div style="background:#f9f9f9;border-radius:8px;padding:20px;margin-bottom:20px;white-space:pre-wrap;line-height:1.6;">
                     ${formatarConteudo(data.conteudo || 'Conteúdo não disponível')}
                 </div>
+                <div style="margin-bottom: 20px;">
+                    <strong>Tags:</strong> 
+                    <span id="tags-display">${(data.tags && data.tags.length) ? data.tags.join(', ') : 'Nenhuma'}</span>
+                </div>
                 <div style="text-align:right;">
+                    <button id="btnMoverPasta" class="btn" style="background:#8e44ad;color:white;">Mover Pasta</button>
+                    <button id="btnEditarTags" class="btn" style="background:#f39c12;color:white;">Editar Tags</button>
                     <button id="btnCopiarModal" class="btn" style="margin-right:10px;">📋 Copiar</button>
                     <button id="btnExportarModal" class="btn">⬇️ Exportar</button>
                     <button id="btnEditar" class="btn" style="background:#ffc17c;color:#333;">✏️ Editar</button>
@@ -601,6 +687,21 @@ class GeradorEsboco {
         `;
 
         document.body.appendChild(modal);
+
+        // Adicionar eventos para os novos botões
+        modal.querySelector('#btnEditarTags').addEventListener('click', () => {
+            const novasTags = prompt('Edite as tags (separadas por vírgula):', (data.tags || []).join(', '));
+            if (novasTags !== null) {
+                const tagsArray = novasTags.split(',').map(tag => tag.trim()).filter(Boolean);
+                this.atualizarEsboco(docId, { tags: tagsArray });
+                modal.remove();
+            }
+        });
+
+        modal.querySelector('#btnMoverPasta').addEventListener('click', async () => {
+            this.abrirModalMoverPasta(docId, data.pasta);
+            modal.remove(); // Fecha o modal de detalhes
+        });
 
         // Adicionar evento de clique seguro para o botão de cópia
         modal.querySelector('#btnCopiarModal').addEventListener('click', () => {
@@ -630,6 +731,89 @@ class GeradorEsboco {
                 modal.remove();
             }
         });
+    }
+
+    // Abrir modal para mover esboço para outra pasta
+    async abrirModalMoverPasta(docId, pastaAtual) {
+        try {
+            const pastasRef = db.collection('usuarios').doc(this.usuarioAtual.uid).collection('pastas');
+            const snapshot = await pastasRef.orderBy("nome", "asc").get();
+
+            const modal = document.createElement('div');
+            modal.id = 'modalMoverPasta';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width:100%; height:100%;
+                background: rgba(0,0,0,0.6); display: flex; align-items: center;
+                justify-content: center; z-index: 4000;
+            `;
+
+            let pastasHTML = '';
+            snapshot.forEach(doc => {
+                const pasta = doc.data();
+                if (pasta.nome !== pastaAtual) { // Não mostra a pasta atual como opção
+                    pastasHTML += `<button class="pasta-option-btn" data-pasta-nome="${pasta.nome}">${pasta.nome}</button>`;
+                }
+            });
+
+            modal.innerHTML = `
+                <div style="background:white;padding:30px;border-radius:12px;max-width:400px;width:90vw;">
+                    <h3 style="margin-top:0; margin-bottom:20px; text-align:center;">Mover Esboço Para...</h3>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        ${pastasHTML}
+                    </div>
+                </div>
+                <style>
+                    .pasta-option-btn {
+                        padding: 12px 20px;
+                        border: 1px solid #ddd;
+                        background: #f9f9f9;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        text-align: left;
+                        font-size: 1em;
+                        transition: background-color 0.2s, border-color 0.2s;
+                    }
+                    .pasta-option-btn:hover {
+                        background: #e9e9e9;
+                        border-color: #ccc;
+                    }
+                </style>
+            `;
+
+            document.body.appendChild(modal);
+
+            modal.querySelectorAll('.pasta-option-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const nomePasta = btn.getAttribute('data-pasta-nome');
+                    this.atualizarEsboco(docId, { pasta: nomePasta });
+                    modal.remove();
+                });
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+        } catch (error) {
+            console.error("Erro ao carregar pastas para mover:", error);
+            alert("Não foi possível carregar as pastas.");
+        }
+    }
+
+    // Função genérica para atualizar campos do esboço
+    async atualizarEsboco(docId, dados) {
+        try {
+            await db.collection("esbocos").doc(docId).update(dados);
+            // Recarrega a visualização atual para refletir a mudança
+            const filtroPasta = document.getElementById('filtroPasta');
+            this.carregarHistorico(this.usuarioAtual.uid, filtroPasta.value);
+            alert('Esboço atualizado com sucesso!');
+        } catch (error) {
+            console.error('Erro ao atualizar esboço:', error);
+            alert('Erro ao atualizar o esboço.');
+        }
     }
 
     // Exportar esboço
