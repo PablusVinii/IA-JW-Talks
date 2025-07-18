@@ -32,7 +32,35 @@ function excluirEsboco(docId, tema) {
     }
 }
 
-function gerarEsboco() {
+async function gerarEsboco() {
+    const user = window.geradorEsboco && window.geradorEsboco.usuarioAtual;
+    if (!user) {
+        alert('Você precisa estar logado para gerar um esboço.');
+        return;
+    }
+
+    try {
+        const userDoc = await db.collection('usuarios').doc(user.uid).get();
+        if (!userDoc.exists) {
+            alert('Usuário não encontrado no banco de dados.');
+            return;
+        }
+
+        const userData = userDoc.data();
+        const limite = userData.limiteEsbocos !== undefined ? userData.limiteEsbocos : 0; 
+
+        if (limite <= 0) {
+            alert(`Você não tem esboços restantes. Para gerar mais, entre em contato com o administrador.`);
+            return;
+        }
+
+    } catch (error) {
+        console.error('Erro ao verificar o limite de esboços:', error);
+        alert('Ocorreu um erro ao verificar suas permissões. Tente novamente.');
+        return;
+    }
+
+
     // Coletar dados do formulário
     const tipoDiscurso = elementos.tipoDiscurso ? elementos.tipoDiscurso.value : '';
     const tempo = elementos.tempo ? elementos.tempo.value : '';
@@ -141,13 +169,22 @@ function gerarEsboco() {
                 informacoes: informacoes,
                 favorito: false, // Adicionado para garantir que o campo exista na criação
                 criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
+            }).then(async () => {
+                // Decrementa o limite de esboços para TODOS os usuários
+                await dbInstance.collection('usuarios').doc(user.uid).update({
+                    limiteEsbocos: firebase.firestore.FieldValue.increment(-1)
+                });
+
                 // Recarregar histórico
                 if (window.geradorEsboco && typeof window.geradorEsboco.carregarHistorico === 'function') {
                     window.geradorEsboco.carregarHistorico(user.uid);
                 }
+                // Atualiza a contagem de esboços na tela
+                if (window.geradorEsboco && typeof window.geradorEsboco.carregarDadosUsuario === 'function') {
+                    window.geradorEsboco.carregarDadosUsuario(user);
+                }
             }).catch((err) => {
-                console.error('Erro ao salvar esboço:', err);
+                console.error('Erro ao salvar esboço ou atualizar limite:', err);
                 alert('Erro ao salvar esboço no banco de dados: ' + (err.message || err));
             });
         } else {
@@ -350,14 +387,25 @@ class GeradorEsboco {
             if (elementos.userInfo) {
                 elementos.userInfo.textContent = `👤 Usuário: ${nomeUsuario}`;
             }
+
+            const userDoc = await db.collection("usuarios").doc(user.uid).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                this.isAdmin = userData.admin === true;
+                
+                const esbocosRestantesEl = document.getElementById('esbocosRestantes');
+                if (esbocosRestantesEl) {
+                    const limite = userData.limiteEsbocos !== undefined ? userData.limiteEsbocos : 0;
+                    esbocosRestantesEl.innerHTML = `✨ Esboços Restantes: <strong>${limite}</strong>`;
+                }
+            } else {
+                this.isAdmin = false;
+            }
             
-            // Verificar se o usuário é admin
-            await this.verificarAdminStatus(user.uid);
-            
+            this.atualizarMenuAdmin();
             await this.carregarHistorico(user.uid);
-            
-            // A chamada para criarSecaoNotificacoes() foi removida.
             await this.carregarNotificacoes(user.uid);
+
         } catch (error) {
             console.error("Erro ao carregar dados do usuário:", error);
         }
@@ -730,118 +778,102 @@ class GeradorEsboco {
     async carregarNotificacoes(uid) {
         const notificacoesList = document.getElementById('notificacoesList');
         if (!notificacoesList) return;
-        
+    
         notificacoesList.innerHTML = '<li style="color:#666;font-style:italic;">Carregando notificações...</li>';
-        
+    
         try {
-            // Buscar notificações específicas do usuário
-            const snapshotEspecificas = await db.collection("notificacoes")
-                .where("destinatarios", "array-contains", uid)
-                .where("geral", "==", false)
-                .limit(10)
-                .get();
-
-            // Buscar notificações gerais (para todos os usuários)
-            const snapshotGerais = await db.collection("notificacoes")
-                .where("geral", "==", true)
-                .limit(10)
-                .get();
-
-            // Buscar IDs de notificações que o usuário ocultou
-            const snapshotOcultas = await db.collection('usuarios').doc(uid).collection('notificacoesOcultas').get();
-            const idsOcultos = snapshotOcultas.docs.map(doc => doc.id);
-
-            // Combinar as duas consultas e filtrar as ocultas
-            const todasNotificacoes = [];
-
-            // Adicionar notificações específicas (se não estiverem ocultas)
-            snapshotEspecificas.docs.forEach(doc => {
-                if (!idsOcultos.includes(doc.id)) {
-                    todasNotificacoes.push({ id: doc.id, ...doc.data() });
-                }
-            });
-            
-            // Adicionar notificações gerais (se não estiverem ocultas)
-            snapshotGerais.docs.forEach(doc => {
-                if (!idsOcultos.includes(doc.id)) {
-                    todasNotificacoes.push({ id: doc.id, ...doc.data() });
-                }
-            });
-
-            if (todasNotificacoes.length === 0) {
-                notificacoesList.innerHTML = '<li style="color:#666;font-style:italic;">Nenhuma notificação</li>';
-                this.atualizarContadorNotificacoes(0);
-                return;
+            // Unsubscribe de listeners anteriores para evitar duplicação
+            if (this.unsubscribeNotificacoes) {
+                this.unsubscribeNotificacoes();
             }
+    
+            this.unsubscribeNotificacoes = db.collection("notificacoes")
+                .where("destinatarios", "array-contains", uid)
+                .onSnapshot(async (snapshotEspecificas) => {
+                    
+                    const snapshotGerais = await db.collection("notificacoes").where("geral", "==", true).get();
+                    
+                    const todasNotificacoes = [];
+                    snapshotEspecificas.docs.forEach(doc => todasNotificacoes.push({ id: doc.id, ...doc.data() }));
+                    snapshotGerais.docs.forEach(doc => {
+                        // Evita duplicatas se uma notificação for geral e específica
+                        if (!todasNotificacoes.some(n => n.id === doc.id)) {
+                            todasNotificacoes.push({ id: doc.id, ...doc.data() });
+                        }
+                    });
 
-            notificacoesList.innerHTML = '';
-            let naoLidas = 0;
-            // Ordenar por data (mais recente primeiro)
-            todasNotificacoes.sort((a, b) => {
-                const dataA = a.data?.toDate ? a.data.toDate() : new Date(a.data || 0);
-                const dataB = b.data?.toDate ? b.data.toDate() : new Date(b.data || 0);
-                return dataB - dataA;
-            });
+                    if (todasNotificacoes.length === 0) {
+                        notificacoesList.innerHTML = '<li style="color:#666;font-style:italic;">Nenhuma notificação</li>';
+                        this.atualizarContadorNotificacoes(0);
+                        return;
+                    }
 
-            todasNotificacoes.forEach(notificacao => {
-                const data = notificacao;
-                
-                const li = document.createElement('li');
-                li.style.cssText = `
-                    padding: 12px;
-                    margin: 8px 0;
-                    border-radius: 8px;
-                    background: ${data.lida ? '#f8fa' : '#e3f2fd'};
-                    border-left: 4px solid ${data.lida ? '#6c757d' : '#007bff'};
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    position: relative;
-                `;
+                    // Ordena por data, mais recente primeiro
+                    todasNotificacoes.sort((a, b) => (b.data?.toDate() || 0) - (a.data?.toDate() || 0));
+    
+                    notificacoesList.innerHTML = '';
+                    let naoLidas = 0;
+    
+                    todasNotificacoes.forEach(data => {
+                        if (!data.lida) naoLidas++;
+                        
+                        const li = document.createElement('li');
+                        li.style.cssText = `
+                            padding: 12px;
+                            margin: 8px 0;
+                            border-radius: 8px;
+                            background: ${data.lida ? '#f8fa' : '#e3f2fd'};
+                            border-left: 4px solid ${data.lida ? '#6c757d' : '#007bff'};
+                            cursor: pointer;
+                            transition: all 0.2s;
+                            position: relative;
+                        `;
 
-                if (!data.lida) naoLidas++;
+                        const indicadorGeral = data.geral ? '<span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:10px;font-size:10px;margin-left:5px;">GERAL</span>' : '';
 
-                // Adicionar indicador visual para notificações gerais
-                const indicadorGeral = data.geral ? '<span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:10px;font-size:10px;margin-left:5px;">GERAL</span>' : '';
-
-                li.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                        <div style="flex:1;">
-                            <div style="font-weight:600;color:#333;margin-bottom:4px;">
-                                ${data.titulo || 'Sem título'}
-                                ${indicadorGeral}
+                        li.innerHTML = `
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                                <div style="flex:1;">
+                                    <div style="font-weight:600;color:#333;margin-bottom:4px;">
+                                        ${data.titulo || 'Sem título'}
+                                        ${indicadorGeral}
+                                    </div>
+                                    <div style="font-size:0.9em;color:#666;margin-bottom:4px;">${data.mensagem || 'Sem mensagem'}</div>
+                                    <div style="font-size:0.8em;color:#666;">${data.data?.toDate ? data.data.toDate().toLocaleString('pt-BR') : 'Data não disponível'}
+                                        ${data.geral && data.totalDestinatarios ? ` | Para ${data.totalDestinatarios} usuários` : ''}
+                                    </div>
+                                </div>
+                                ${!data.lida ? '<span style="background:#ff4757;color:white;padding:2px 6px;border-radius:10px;font-size:10px;">NOVA</span>' : ''}
                             </div>
-                            <div style="font-size:0.9em;color:#666;margin-bottom:4px;">${data.mensagem || 'Sem mensagem'}</div>
-                            <div style="font-size:0.8em;color:#666;">${data.data?.toDate ? data.data.toDate().toLocaleString('pt-BR') : 'Data não disponível'}
-                                ${data.geral && data.totalDestinatarios ? ` | Para ${data.totalDestinatarios} usuários` : ''}
-                            </div>
-                        </div>
-                        ${!data.lida ? '<span style="background:#ff4757;color:white;padding:2px 6px;border-radius:10px;font-size:10px;">NOVA</span>' : ''}
-                    </div>
-                `;
+                        `;
+                        
+                        li.addEventListener('click', () => {
+                            this.marcarNotificacaoComoLida(data.id, data);
+                            this.mostrarDetalhesNotificacao(data);
+                        });
 
-                li.addEventListener('click', () => {
-                    this.marcarNotificacaoComoLida(notificacao.id, data);
-                    this.mostrarDetalhesNotificacao(data);
+                        li.addEventListener('mouseenter', () => {
+                            li.style.transform = 'translateX(5px)';
+                            li.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                        });
+
+                        li.addEventListener('mouseleave', () => {
+                            li.style.transform = 'translateX(0)';
+                            li.style.boxShadow = 'none';
+                        });
+
+                        notificacoesList.appendChild(li);
+                    });
+    
+                    this.atualizarContadorNotificacoes(naoLidas);
+                }, (error) => {
+                    console.error("Erro no listener de notificações:", error);
+                    notificacoesList.innerHTML = '<li style="color:red;">Erro ao carregar notificações.</li>';
                 });
-
-                li.addEventListener('mouseenter', () => {
-                    li.style.transform = 'translateX(5px)';
-                    li.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                });
-
-                li.addEventListener('mouseleave', () => {
-                    li.style.transform = 'translateX(0)';
-                    li.style.boxShadow = 'none';
-                });
-
-                notificacoesList.appendChild(li);
-            });
-
-            this.atualizarContadorNotificacoes(naoLidas);
-
+    
         } catch (error) {
-            notificacoesList.innerHTML = '<li style="color:red;">Erro ao carregar notificações</li>';
-            console.error("Erro ao carregar notificações:", error);
+            console.error("Erro ao configurar listener de notificações:", error);
+            notificacoesList.innerHTML = '<li style="color:red;">Erro fatal ao carregar notificações.</li>';
         }
     }
 

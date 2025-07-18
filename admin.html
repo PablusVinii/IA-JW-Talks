@@ -79,12 +79,13 @@
                             <th>Nome</th>
                             <th>E-mail</th>
                             <th>Data Cadastro</th>
+                            <th>Esboços Restantes</th>
                             <th>Status</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td colspan="5">Carregando usuários...</td></tr>
+                        <tr><td colspan="6">Carregando usuários...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1337,15 +1338,23 @@
     function renderizarUsuarios(usuarios) {
         tabelaUsuarios.innerHTML = '';
         if (!usuarios.length) {
-            tabelaUsuarios.innerHTML = '<tr><td colspan="5">Nenhum usuário encontrado.</td></tr>';
+            tabelaUsuarios.innerHTML = '<tr><td colspan="6">Nenhum usuário encontrado.</td></tr>';
             return;
         }
         usuarios.forEach(u => {
             const tr = document.createElement('tr');
+            
             tr.innerHTML = `
                 <td>${u.nome || '-'}</td>
                 <td>${u.email || '-'}</td>
                 <td>${u.criadoEm ? (u.criadoEm.toDate ? u.criadoEm.toDate().toLocaleString('pt-BR') : new Date(u.criadoEm).toLocaleString('pt-BR')) : '-'}</td>
+                <td>
+                    <span>${u.limiteEsbocos !== undefined ? u.limiteEsbocos : 'N/D'}</span>
+                </td>
+                <td>
+                    <input type="number" placeholder="Adicionar" min="1" id="adicionar-${u.uid}" style="width: 80px;">
+                    <button onclick="adicionarEsbocos('${u.uid}')">Adicionar</button>
+                </td>
                 <td>${u.bloqueado ? '<span style="color:red;">Bloqueado</span>' : '<span style="color:green;">Ativo</span>'}</td>
                 <td class="admin-actions">
                     <button onclick="bloquearUsuario('${u.uid}', ${!!u.bloqueado})" style="background:${u.bloqueado ? '#28a745' : '#dc3545'};color:#fff;">${u.bloqueado ? 'Desbloquear' : 'Bloquear'}</button>
@@ -1371,9 +1380,33 @@
     }
     buscaUsuario.addEventListener('input', filtrarUsuarios);
 
+    // **** INÍCIO DA CORREÇÃO ****
+    window.adicionarEsbocos = async function(uid) {
+        const input = document.getElementById(`adicionar-${uid}`);
+        const quantidadeParaAdicionar = parseInt(input.value, 10);
+
+        if (isNaN(quantidadeParaAdicionar) || quantidadeParaAdicionar <= 0) {
+            alert('Por favor, insira um número válido para adicionar.');
+            return;
+        }
+
+        try {
+            await firebase.firestore().collection('usuarios').doc(uid).update({
+                limiteEsbocos: firebase.firestore.FieldValue.increment(quantidadeParaAdicionar)
+            });
+            alert('Esboços adicionados com sucesso!');
+            input.value = ''; // Limpa o campo após a adição
+            carregarUsuarios(); // Recarrega a lista para mostrar o novo total
+        } catch (error) {
+            console.error('Erro ao adicionar esboços:', error);
+            alert('Erro ao adicionar esboços. Tente novamente.');
+        }
+    };
+    // **** FIM DA CORREÇÃO ****
+    
     // Carregar todos os usuários do Firestore
     async function carregarUsuarios() {
-        tabelaUsuarios.innerHTML = '<tr><td colspan="5">Carregando usuários...</td></tr>';
+        tabelaUsuarios.innerHTML = '<tr><td colspan="6">Carregando usuários...</td></tr>';
         try {
             console.log('Carregando usuários...');
             const snap = await firebase.firestore().collection('usuarios').orderBy('criadoEm', 'desc').get();
@@ -1384,7 +1417,7 @@
             console.error('Erro ao carregar usuários:', e);
             console.error('Código do erro:', e.code);
             console.error('Mensagem do erro:', e.message);
-            tabelaUsuarios.innerHTML = `<tr><td colspan="5" style="color:red;">Erro ao carregar usuários: ${e.message || e}</td></tr>`;
+            tabelaUsuarios.innerHTML = `<tr><td colspan="6" style="color:red;">Erro ao carregar usuários: ${e.message || e}</td></tr>`;
         }
     }
 

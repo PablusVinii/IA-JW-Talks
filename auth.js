@@ -66,6 +66,11 @@ function setupCadastroForm() {
             const nomeCompleto = document.getElementById("nome").value.trim(); // Modificado
             const email = document.getElementById("email").value.trim();
             const senha = document.getElementById("senha").value;
+            
+            // Defina aqui os emails que devem ser administradores no momento do cadastro
+            const adminEmails = ["admin@example.com", "seu-email-admin@dominio.com"];
+            const isAdmin = adminEmails.includes(email.toLowerCase());
+            const limiteInicial = isAdmin ? 10 : 2;
 
             // Validação simplificada sem sobrenome
             if (!nomeCompleto) {
@@ -94,7 +99,9 @@ function setupCadastroForm() {
                     uid: cred.user.uid,
                     nome: nomeCompleto,
                     email: email,
-                    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                    criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+                    limiteEsbocos: limiteInicial,
+                    isAdmin: isAdmin 
                 });
                 showMessage("Cadastro realizado com sucesso! Redirecionando...", "success");
                 setTimeout(() => {

@@ -6,6 +6,27 @@
     <title>Gerador de Esboços - Testemunhas de Jeová</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        .user-info {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+        .esbocos-restantes {
+            font-size: 1em;
+            margin-bottom: 20px;
+            padding: 8px;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body>
     <div class="app-wrapper">
@@ -22,8 +43,12 @@
             </div>
 
             <div class="sidebar-content">
-                <div id="userInfo">Carregando...</div>
-                <a href="perfil.html" class="btn btn-secondary" style="width: 100%; margin-bottom: 20px;">Meu Perfil</a>
+                <div id="userInfo" class="user-info">Carregando...</div>
+                <div id="esbocosRestantes" class="esbocos-restantes"></div>
+                
+                <!-- Links de Navegação -->
+                <a href="comprar-creditos.html" class="btn btn-primary" style="width: 100%; margin-bottom: 20px;">💰 Comprar Créditos</a>
+                <a href="perfil.html" class="btn btn-secondary" style="width: 100%; margin-bottom: 20px;">👤 Perfil e Histórico</a>
 
                 <h3>Histórico</h3>
                 <ul id="historicoList"><!-- Conteúdo dinâmico --></ul>
