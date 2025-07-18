@@ -1,11 +1,15 @@
 function abrirMenu() {
     const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.style.width = "300px";
+    if (sidebar) {
+        sidebar.classList.add('open');
+    }
 }
 
 function fecharMenu() {
     const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.style.width = "0";
+    if (sidebar) {
+        sidebar.classList.remove('open');
+    }
 }
 
 function logout() {
@@ -70,8 +74,25 @@ function gerarEsboco() {
         body: JSON.stringify(payload)
     })
     .then(async (response) => {
-        if (!response.ok) throw new Error('Erro ao gerar esboço.');
-        return await response.json();
+        if (!response.ok) {
+            // Tenta obter mais detalhes do corpo da resposta em caso de erro.
+            const errorBody = await response.text().catch(() => 'Não foi possível ler o corpo do erro.');
+            throw new Error(`A requisição falhou com status ${response.status}. Resposta: ${errorBody}`);
+        }
+        
+        const responseText = await response.text();
+        if (!responseText) {
+            // Se a resposta estiver vazia, joga um erro claro.
+            throw new Error('O servidor retornou uma resposta vazia, o que pode indicar um erro interno.');
+        }
+
+        try {
+            // Tenta analisar o texto como JSON
+            return JSON.parse(responseText);
+        } catch (e) {
+            console.error('Falha ao analisar JSON:', responseText);
+            throw new Error('A resposta do servidor não é um JSON válido.');
+        }
     })
     .then((data) => {
         // Se vier como array, pega o primeiro objeto
@@ -210,7 +231,7 @@ function exportarResultado() {
 }
 
 // Configurações da API
-const API_URL = 'https://primary-production-5b08.up.railway.app/webhook/fd061969-eb2c-4355-89da-910ec299d4ef';
+const API_URL = 'https://primary-production-5b08.up.railway.app/webhook-test/fd061969-eb2c-4355-89da-910ec299d4ef';
 
 const elementos = {
     tipoDiscurso: document.getElementById('tipoDiscurso'),
@@ -259,27 +280,21 @@ class GeradorEsboco {
     // Atualizar menu para mostrar/esconder link do admin
     atualizarMenuAdmin() {
         const adminLink = document.getElementById('adminLink');
-        const nav = document.querySelector('#sidebar nav');
+        const userInfo = document.getElementById('userInfo'); // Ponto de referência
 
         if (this.isAdmin) {
             // Se o usuário é admin e o link não existe, cria e adiciona
-            if (!adminLink && nav) {
+            if (!adminLink && userInfo) {
                 const adminLinkElement = document.createElement('a');
                 adminLinkElement.href = "admin.html";
                 adminLinkElement.id = 'adminLink';
-                adminLinkElement.innerHTML = '🔒 Painel Admin';
-                adminLinkElement.style.cssText = `
-                    display: block;
-                    padding: 10px 20px;
-                    margin: 10px 0;
-                    background: linear-gradient(135deg, #e13b83, #c72c5c);
-                    color: white;
-                    text-align: center;
-                    border-radius: 5px;
-                    text-decoration: none;
-                    font-weight: 600;
-                `;
-                nav.insertAdjacentElement('afterend', adminLinkElement);
+                adminLinkElement.textContent = '🔒 Painel Admin';
+                adminLinkElement.className = 'btn btn-secondary';
+                adminLinkElement.style.width = '100%';
+                adminLinkElement.style.marginBottom = '20px';
+                
+                // Inserir depois do userInfo e antes do botão de perfil, usando nextElementSibling
+                userInfo.parentNode.insertBefore(adminLinkElement, userInfo.nextElementSibling);
             }
         } else {
             // Se o usuário não é admin e o link existe, remove
@@ -289,6 +304,9 @@ class GeradorEsboco {
         }
     }
 
+    // A função abaixo está obsoleta e será removida.
+    // O HTML para as notificações agora existe diretamente no index.html
+    /*
     // Criar e exibir a seção de notificações no menu
     criarSecaoNotificacoes() {
         if (document.getElementById('notificacoesSection')) return; // Já existe
@@ -323,6 +341,7 @@ class GeradorEsboco {
             btnMarcarLidas.addEventListener('click', () => this.marcarTodasComoLidas());
         }
     }
+    */
 
     // Carregar dados do usuário e atualizar menu
     async carregarDadosUsuario(user) {
@@ -337,7 +356,7 @@ class GeradorEsboco {
             
             await this.carregarHistorico(user.uid);
             
-            this.criarSecaoNotificacoes();
+            // A chamada para criarSecaoNotificacoes() foi removida.
             await this.carregarNotificacoes(user.uid);
         } catch (error) {
             console.error("Erro ao carregar dados do usuário:", error);
@@ -349,40 +368,30 @@ class GeradorEsboco {
         try {
             const doc = await db.collection("usuarios").doc(uid).get();
             this.isAdmin = doc.exists && doc.data().admin === true;
-            this.atualizarMenuAdmin();
         } catch (error) {
             console.error("Erro ao verificar status de admin:", error);
             this.isAdmin = false;
         }
+        this.atualizarMenuAdmin(); // Chamar aqui garante que execute após a verificação
     }
 
     // Atualizar menu para mostrar/esconder link do admin
     atualizarMenuAdmin() {
         const adminLink = document.getElementById('adminLink');
-        const nav = document.querySelector('#sidebar nav');
+        const userInfo = document.getElementById('userInfo');
 
         if (this.isAdmin) {
-            // Se o usuário é admin e o link não existe, cria e adiciona
-            if (!adminLink && nav) {
+            if (!adminLink && userInfo) {
                 const adminLinkElement = document.createElement('a');
                 adminLinkElement.href = "admin.html";
                 adminLinkElement.id = 'adminLink';
-                adminLinkElement.innerHTML = '🔒 Painel Admin';
-                adminLinkElement.style.cssText = `
-                    display: block;
-                    padding: 10px 20px;
-                    margin: 10px 0;
-                    background: linear-gradient(135deg, #e13b83, #c72c5c);
-                    color: white;
-                    text-align: center;
-                    border-radius: 5px;
-                    text-decoration: none;
-                    font-weight: 600;
-                `;
-                nav.insertAdjacentElement('afterend', adminLinkElement);
+                adminLinkElement.textContent = '🔒 Painel Admin';
+                adminLinkElement.className = 'btn btn-secondary';
+                adminLinkElement.style.width = '100%';
+                adminLinkElement.style.marginBottom = '20px';
+                userInfo.parentNode.insertBefore(adminLinkElement, userInfo.nextElementSibling);
             }
         } else {
-            // Se o usuário não é admin e o link existe, remove
             if (adminLink) {
                 adminLink.remove();
             }
@@ -532,10 +541,11 @@ class GeradorEsboco {
                     <strong>Tempo:</strong> ${data.tempo || 'Não especificado'} minutos
                 </div>
                 <div style="background:#f9f9f9;border-radius:8px;padding:20px;margin-bottom:20px;white-space:pre-wrap;line-height:1.6;">
-                    ${formatarConteudo(data.conteudo || 'Conteúdo não disponível')}                </div>
+                    ${formatarConteudo(data.conteudo || 'Conteúdo não disponível')}
+                </div>
                 <div style="text-align:right;">
-                    <button onclick="navigator.clipboard.writeText('${data.conteudo || ''}').then(() => alert('Copiado!'))" class="btn" style="margin-right:10px;">📋 Copiar</button>
-                    <button onclick="window.geradorEsboco.exportarEsboco('${data.tema || 'Esboço'}, '${data.conteudo || ''}')">⬇️ Exportar</button>
+                    <button id="btnCopiarModal" class="btn" style="margin-right:10px;">📋 Copiar</button>
+                    <button id="btnExportarModal" class="btn">⬇️ Exportar</button>
                     <button id="btnEditar" class="btn" style="background:#ffc17c;color:#333;">✏️ Editar</button>
                     <button id="btnExcluir" class="btn" style="background:#dc3545;color:white;margin-left:10px;">🗑️ Excluir</button>
                 </div>
@@ -543,6 +553,18 @@ class GeradorEsboco {
         `;
 
         document.body.appendChild(modal);
+
+        // Adicionar evento de clique seguro para o botão de cópia
+        modal.querySelector('#btnCopiarModal').addEventListener('click', () => {
+            navigator.clipboard.writeText(data.conteudo || '')
+                .then(() => alert('Esboço copiado para a área de transferência!'))
+                .catch(err => console.error('Erro ao copiar:', err));
+        });
+
+        // Adicionar evento de clique seguro para o botão de exportar
+        modal.querySelector('#btnExportarModal').addEventListener('click', () => {
+            this.exportarEsboco(data.tema || 'Esboço', data.conteudo || '');
+        });
         
         // Adicionar evento de clique no botão de edição
         const btnEditar = modal.querySelector('#btnEditar');

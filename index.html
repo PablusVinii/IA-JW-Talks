@@ -4,51 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Esboços - Testemunhas de Jeová</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Menu Button -->
-    <div class="menu-container">
-        <button onclick="abrirMenu()" class="menu-btn" aria-label="Abrir menu">☰</button>
-        <span id="menuNotificacaoBadge" class="notification-badge" style="display: none;"></span>
-    </div>
+    <div class="app-wrapper">
+        <!-- Botão para abrir menu em mobile -->
+        <button onclick="abrirMenu()" class="menu-btn" aria-label="Abrir menu">☰<span id="menuNotificacaoBadge" style="display: none;"></span></button>
 
-    <!-- Sidebar -->
+        <!-- Sidebar / Menu Lateral -->
     <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
         <a href="javascript:void(0)" class="closebtn" onclick="fecharMenu()" aria-label="Fechar menu">×</a>
-        <div id="userInfo">👤 Usuário: carregando...</div>
-        <hr>
-        <nav>
-            <a href="perfil.html" style="display: block; padding: 10px 20px; text-decoration: none; color: #4a4a4a; font-weight: 500; background: #f0f0f0; border-radius: 5px; margin: 0 15px 10px;">👤 Meu Perfil</a>
-            <h3><span role="img" aria-label="Relógio">🕓</span> Histórico de Esboços</h3>
-            <ul id="historicoList">
-                <!-- Histórico será carregado aqui -->
-            </ul>
-        </nav>
-        <hr>
-        <button onclick="logout()" class="btn sair-btn">🚪 Sair</button>
+                <div class="logo-header">
+                    <h1>📖 Gerador IA</h1>
+                </div>
+            </div>
+
+            <div class="sidebar-content">
+                <div id="userInfo">Carregando...</div>
+                <a href="perfil.html" class="btn btn-secondary" style="width: 100%; margin-bottom: 20px;">Meu Perfil</a>
+
+                <h3>Histórico</h3>
+                <ul id="historicoList"><!-- Conteúdo dinâmico --></ul>
+
+                <div id="notificacoesSection">
+                    <h3>Notificações</h3>
+                    <ul id="notificacoesList"><!-- Conteúdo dinâmico --></ul>
+                    <button id="btnMarcarLidas" class="btn btn-secondary" style="width:100%; margin-top:10px; display:none;">Marcar como lidas</button>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="btn btn-danger" style="width: 100%;">Sair</button>
+            </div>
     </aside>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="firebase-init.js"></script>
-
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>📖 Gerador de Esboços</h1>
-            <p>Testemunhas de Jeová - Preparação de discursos - Versão 2.0</p>
-        </header>
-
-        <main class="main-content">
-            <!-- Form Section -->
-            <section class="form-section" id="formSection">
-                <h2>Configurar Esboço</h2>
+        <!-- Conteúdo Principal -->
+        <main class="main-container">
+            <!-- Formulário -->
+            <section id="formSection" class="card">
+                <div class="page-header">
+                    <h1>Gerador de Esboços</h1>
+                    <p>Preencha os campos para criar um novo esboço para seu discurso.</p>
+                </div>
                 
                 <div class="form-group">
                     <label for="tipoDiscurso">Tipo de Discurso:</label>
@@ -62,84 +61,48 @@
                         <option value="publico">6. Explicando suas crenças (Em breve...)</option>
                     </select>
                 </div>
-
-                <div class="form-group">
-                    <label for="tempo">Tempo estimado (minutos):</label>
-                    <input type="number" id="tempo" name="tempo" placeholder="Digite o tempo em minutos..." min="1" max="10">
-                </div>
-
-                <div class="form-group">
-                    <label for="tema">Tema Específico:</label>
-                    <input type="text" id="tema" name="tema" placeholder="Digite o tema do seu discurso...">
-                </div>
-
-                <div class="form-group">
-                    <label for="versiculosOpicionais">Versículos Bíblicos (opcional):</label>
-                    <input type="text" id="versiculosOpicionais" name="versiculosOpicionais" placeholder="Ex: João 3:16; Salmo 23:1; Mateus 6:33">
-                </div>
-
-                <div class="form-group">
-                    <label for="topicosOpicionais">Tópicos a serem abordados (opcional):</label>
-                    <input type="text" id="topicosOpicionais" name="topicosOpicionais" placeholder="Tópicos que você gostaria de incluir...">
-                </div>
-
-                <div class="form-group">
-                    <label for="informacoesAdicionais">Informações Adicionais (opcional):</label>
-                    <input type="text" id="informacoesAdicionais" name="informacoesAdicionais" placeholder="Ex: referências extras, tom animador, exemplos práticos...">
-                </div>
-
-                <button class="btn" onclick="gerarEsboco()">
-                    🔍 Gerar Esboço
-                </button>
-            </div>
+                <div class="form-group"><label for="tempo">Tempo (minutos):</label><input type="number" id="tempo" name="tempo" placeholder="Ex: 10" min="1" max="10"></div>
+                <div class="form-group"><label for="tema">Tema Específico:</label><input type="text" id="tema" name="tema" placeholder="Digite o tema do seu discurso..."></div>
+                <div class="form-group"><label for="versiculosOpicionais">Versículos (opcional):</label><input type="text" id="versiculosOpicionais" name="versiculosOpicionais" placeholder="Ex: João 3:16; Salmo 23:1"></div>
+                <div class="form-group"><label for="topicosOpicionais">Tópicos (opcional):</label><input type="text"id="topicosOpicionais" name="topicosOpicionais" placeholder="Tópicos que gostaria de incluir..."></div>
+                <div class="form-group"><label for="informacoesAdicionais">Informações Adicionais (opcional):</label><input type="text" id="informacoesAdicionais" name="informacoesAdicionais" placeholder="Ex: tom animador, exemplos práticos..."></div>
+                
+                <button class="btn" onclick="gerarEsboco()">Gerar Esboço</button>
+                <div class="error" id="errorMessage" role="alert" style="display: none;"></div>
+            </section>
 
             <!-- Loading -->
-            <div class="loading" id="loading">
+            <div class="loading card" id="loading">
                 <div class="spinner"></div>
                 <p>Buscando informações na biblioteca JW.org...</p>
             </div>
 
-            <!-- Result Section -->
-            <div class="result-section" id="resultSection">
+            <!-- Resultados -->
+            <section id="resultSection" class="card">
                 <div class="result-header">
                     <h2 class="result-title" id="resultTitle">Esboço Gerado</h2>
                     <p class="result-type" id="resultType">Discurso Personalizado</p>
                 </div>
-
-                <div class="pontos-section">
-                    <h3 class="section-title">📝 Pontos Principais</h3>
-                    <ul class="pontos-list" id="pontosList"></ul>
-                </div>
-
+                <div id="pontosList" style="display:none;"></div>
                 <div class="referencias-section">
-                    <h3 class="section-title">📚 Conteúdo Completo</h3>
-                    <div class="referencias-list" id="referenciasList"></div>
+                    <h3 class="section-title">Conteúdo Completo</h3>
+                    <div id="referenciasList"><pre></pre></div>
                 </div>
-
                 <div class="result-actions">
-                    <button class="btn" id="btnGerarNovo" onclick="mostrarFormulario()">
-                        + Gerar Novo Esboço
-                    </button>
-                    <button class="btn" id="btnDownload" onclick="baixarComoWord()">
-                        📥 Baixar como Word
-                    </button>
-                    <button class="btn" onclick="exportarResultado()">
-                        📋 Copiar Texto
-                    </button>
+                    <button class="btn btn-secondary" id="btnGerarNovo" onclick="mostrarFormulario()">+ Gerar Novo Esboço</button>
+                    <button class="btn" id="btnDownload" onclick="baixarComoWord()">Baixar como Word</button>
+                    <button class="btn" onclick="exportarResultado()">Copiar Texto</button>
                 </div>
+            </section>
+        </main>
             </div>
 
-            <!-- Error Message -->
-            <div class="error" id="errorMessage" role="alert"></div>
-        </section> <!-- Fechando form-section -->
-        </main> <!-- Fechando main-content -->
-    </div> 
-
-    <!-- Footer -->
-    <footer class="footer">
-        <p>Desenvolvido por <a href="https://github.com/PablusVinii/" target="_blank">Pablus Vinii</a> - Estudante de Engenharia de Software</p>
-    </footer>
-
+    <!-- Firebase e Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="auth.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
