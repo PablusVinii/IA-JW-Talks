@@ -1,5 +1,6 @@
 1. Melhorias na Experiência do Usuário (UX)
 Editor de Texto Rico (Rich Text): Substituir a área de texto simples do resultado do esboço por um editor que permita formatação básica, como negrito, itálico, listas e marcadores. Isso daria ao usuário mais controle sobre a aparência do esboço antes de exportá-lo.
+
 Modo Escuro (Dark Mode): Oferecer um tema escuro é uma funcionalidade muito popular e pode melhorar o conforto visual dos usuários, especialmente durante o uso noturno.
 Tour de Boas-Vindas: Para novos usuários, um pequeno tour guiado na primeira vez que acessam o sistema poderia apresentar as principais funcionalidades: como gerar o primeiro esboço, onde encontrar o histórico, como funcionam as pastas, etc.
 2. Funcionalidades de Colaboração e Compartilhamento

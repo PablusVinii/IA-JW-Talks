@@ -136,15 +136,9 @@ async function gerarEsboco() {
         if (elementos.resultTitle) elementos.resultTitle.textContent = tema || 'Esboço Gerado';
         if (elementos.resultType) elementos.resultType.textContent = tipoDiscurso || 'Discurso Personalizado';
 
-        // Limpa lista de pontos
-        if (elementos.pontosList) elementos.pontosList.innerHTML = '';
-
-        // Exibe o texto completo do esboço, com formatação
-        if (elementos.referenciasList) {
-            elementos.referenciasList.innerHTML = '';
-            const pre = document.createElement('pre');
-            pre.innerHTML = formatarConteudo(data.output || '');
-            elementos.referenciasList.appendChild(pre);
+        // Carrega o conteúdo no editor Quill
+        if (window.quill) {
+            window.quill.root.innerHTML = formatarConteudo(data.output || '');
         }
 
         window.ultimoEsbocoGerado = data;
@@ -217,10 +211,14 @@ function formatarConteudo(texto) {
 }
 
 function baixarComoWord() {
+    if (!window.quill) {
+        alert('Editor não inicializado.');
+        return;
+    }
     const titulo = elementos.resultTitle ? elementos.resultTitle.textContent : 'Esboco';
-    const conteudo = elementos.referenciasList ? elementos.referenciasList.textContent : '';
+    const conteudo = window.quill.root.innerHTML;
 
-    if (!conteudo) {
+    if (!conteudo.trim() || conteudo === '<p><br></p>') {
         alert('Não há esboço gerado para baixar.');
         return;
     }
@@ -254,9 +252,13 @@ function baixarComoWord() {
 }
 
 function exportarResultado() {
-    const conteudo = elementos.referenciasList ? elementos.referenciasList.textContent : '';
+    if (!window.quill) {
+        alert('Editor não inicializado.');
+        return;
+    }
+    const conteudo = window.quill.getText();
 
-    if (!conteudo) {
+    if (!conteudo.trim()) {
         alert('Não há esboço gerado para copiar.');
         return;
     }
@@ -292,6 +294,21 @@ const elementos = {
     sidebar: document.getElementById('sidebar'),
     btnDownload: document.getElementById('btnDownload')
 };
+
+// Inicializa o editor Quill
+var quill = new Quill('#editor-container', {
+    theme: 'snow',
+    modules: {
+        toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['clean']
+        ]
+    },
+    placeholder: 'O conteúdo do seu esboço aparecerá aqui...'
+});
+window.quill = quill;
 
 // Classe principal da aplicação
 class GeradorEsboco {
