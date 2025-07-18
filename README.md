@@ -1,237 +1,110 @@
-# 📖 Gerador de Esboços para Testemunhas de Jeová (Frontend com Firebase)
+# Gerador de Esboços para Testemunhas de Jeová (IA)
 
-Este projeto é uma aplicação web front-end projetada para auxiliar as Testemunhas de Jeová na preparação de discursos para suas reuniões. A ferramenta permite gerar esboços automáticos baseados em temas e tipos de discurso, buscando informações relevantes e organizando-as de forma prática. Esta versão integra autenticação de usuários e armazenamento de histórico de esboços utilizando Firebase.
+Este projeto é uma aplicação web completa projetada para ajudar as Testemunhas de Jeová a criar esboços de discursos e apresentações de forma rápida e intuitiva, utilizando inteligência artificial. A plataforma conta com um sistema de autenticação seguro, gerenciamento de usuários, histórico de esboços, notificações e um painel administrativo.
 
-Edição 2.0 
+## ✨ Visão Geral
 
-## ✨ Funcionalidades Principais
+O objetivo principal da aplicação é fornecer uma ferramenta centralizada e inteligente para a preparação de discursos. Usuários podem se cadastrar, gerar esboços com base em parâmetros específicos (como tema, tempo e tipo de discurso), salvar seu histórico, gerenciar seu perfil e receber notificações importantes.
 
--   **Autenticação de Usuários (Firebase Authentication):**
-    -   Cadastro seguro de novos usuários (nome, e-mail, senha).
-    -   Login para usuários existentes.
-    -   Logout seguro.
-    -   Persistência de sessão entre visitas.
-    -   Página principal protegida, acessível apenas após login.
--   **Geração de Esboços Dinâmicos:**
-    -   Formulário para especificar: tipo de discurso, tempo estimado, tema, versículos e tópicos opcionais, e informações adicionais.
-    -   Comunicação com uma **API Backend externa** (configurável) para processar a solicitação e gerar o conteúdo do esboço.
--   **Visualização e Interação com Resultados:**
-    -   Exibição clara do esboço gerado, com formatação de negrito.
-    -   Opção para copiar o texto completo do esboço para a área de transferência.
-    -   Funcionalidade para baixar o esboço como um arquivo `.doc` (Word).
--   **Histórico de Esboços (Cloud Firestore):**
-    -   Salvamento automático de cada esboço gerado no Cloud Firestore, associado ao usuário logado.
-    -   Visualização do histórico dos últimos 10 esboços na sidebar, ordenados por data.
-    -   Possibilidade de carregar um esboço salvo anteriormente a partir do histórico.
--   **Interface Responsiva e Intuitiva:**
-    -   Design moderno e adaptável a diferentes tamanhos de tela (desktop, tablet, mobile).
-    -   Sidebar para navegação, acesso ao histórico, informações do usuário e logout.
-    -   Feedback visual para o usuário (loading, mensagens de erro, notificações de sucesso).
--   **Landing Page Informativa:**
-    -   Página inicial (`home.html`) que apresenta o projeto e direciona para login/cadastro.
+A arquitetura foi projetada para ser segura e escalável, separando a interface do usuário (frontend) da lógica de negócios e da integração com a API de IA (backend).
 
-## 🛠️ Tecnologias Utilizadas
+## 🚀 Funcionalidades Principais
 
--   **Frontend:**
-    -   **HTML5:** Estruturação semântica do conteúdo.
-    -   **CSS3:** Estilização, responsividade (Flexbox, Grid, Media Queries), variáveis CSS, animações.
-    -   **JavaScript (ES6+):** Lógica da aplicação, manipulação de DOM, eventos, requisições `fetch` (assíncronas), programação orientada a objetos (classes).
--   **Backend & Banco de Dados (Serviços Firebase):**
-    -   **Firebase Authentication:** Para gerenciamento de usuários (cadastro, login, logout, sessões).
-    -   **Cloud Firestore:** Banco de dados NoSQL para armazenar perfis de usuários e histórico de esboços.
--   **API Externa (Dependência):**
-    -   A aplicação consome uma API externa (URL configurável em `script.js`) para a lógica de processamento e geração do conteúdo dos esboços. **Esta API não faz parte deste repositório e precisa ser implementada e hospedada separadamente.**
+### Para Usuários
+- **Autenticação Segura:** Sistema completo de cadastro, login e redefinição de senha utilizando Firebase Authentication.
+- **Geração de Esboços com IA:**
+    - Formulário intuitivo para inserir tema, tipo de discurso, tempo, versículos e outras informações.
+    - Integração com uma API de IA para gerar conteúdo relevante e estruturado.
+- **Histórico de Esboços:**
+    - Os esboços gerados são salvos automaticamente no perfil do usuário.
+    - Visualização, edição e exclusão de esboços antigos.
+    - Funcionalidade para marcar esboços como "favoritos", que aparecem no topo da lista.
+- **Gerenciamento de Perfil:**
+    - Página para o usuário visualizar e atualizar suas informações (nome, senha).
+    - Opção segura para exclusão da conta, removendo todos os dados associados.
+- **Notificações:**
+    - Sistema de notificações para receber avisos gerais do administrador ou mensagens específicas.
+    - Contador de notificações não lidas e opção para marcá-las como lidas.
+- **Interface Moderna:**
+    - Design responsivo e amigável com um menu lateral para navegação.
+    - Feedback visual durante o carregamento e em caso de erros.
+- **Exportação:**
+    - Opção para copiar o conteúdo do esboço ou baixá-lo como um arquivo `.doc`.
 
-## 📁 Estrutura do Projeto
+### Para Administradores
+- **Painel Administrativo:**
+    - Uma página `admin.html` dedicada, acessível apenas para usuários com permissão de administrador.
+    - Visualização de todos os usuários cadastrados e seus detalhes (UID, email, nome).
+    - Ferramentas para gerenciar usuários (promover a admin, remover permissão, excluir usuário).
+    - Envio de notificações, tanto gerais (para todos) quanto específicas (para usuários selecionados).
 
-```
-.
-├── index.html              # Página principal da aplicação (gerador de esboços)
-├── home.html               # Landing page/página inicial do projeto
-├── login.html              # Página de login de usuários
-├── cadastro.html           # Página de cadastro de novos usuários
-├── style.css               # Folha de estilo principal (global e para index.html)
-├── auth.css                # Folha de estilo para as páginas de login e cadastro
-├── home.css                # Folha de estilo para a página home.html
-├── utils.css               # CSS com classes utilitárias (ex: .visually-hidden)
-├── script.js               # Lógica JavaScript principal para index.html
-├── auth.js                 # Lógica JavaScript para login.html e cadastro.html
-├── firebase-init.js        # Script para configuração e inicialização do Firebase
-└── README.md               # Este arquivo de documentação
-```
+## 🏛️ Arquitetura
 
-## 🚀 Como Executar o Projeto (Frontend)
+O projeto é dividido em três componentes principais que trabalham em conjunto:
 
-1.  **Pré-requisitos:**
-    *   Um navegador web moderno (Chrome, Firefox, Edge, Safari).
-    *   Conexão com a internet (para carregar SDKs do Firebase).
-    *   **Projeto Firebase Configurado:**
-        *   Crie um projeto no [Firebase Console](https://console.firebase.google.com/).
-        *   Obtenha as credenciais de configuração do seu projeto (apiKey, authDomain, etc.).
-        *   No console do Firebase:
-            *   Habilite o **Firebase Authentication** com o provedor "E-mail/Senha".
-            *   Configure o **Cloud Firestore** (crie um banco de dados).
-            *   Adicione as [Regras de Segurança do Firestore](#%EF%B8%8F-configura%C3%A7%C3%B5es-importantes) sugeridas.
-            *   Crie o [Índice do Firestore](#%EF%B8%8F-configura%C3%A7%C3%B5es-importantes) necessário para a consulta do histórico.
+1.  **Frontend (Cliente Web):**
+    - Construído com **HTML5, CSS3 e JavaScript (Vanilla JS)**.
+    - Responsável por toda a interface do usuário: formulários, painéis, listas e interações.
+    - Comunica-se diretamente com o **Firebase** para autenticação e operações de banco de dados (Firestore).
+    - Para a geração de esboços, o frontend envia uma requisição para o backend seguro, garantindo que a chave da API de IA não seja exposta no cliente.
 
-2.  **Configuração Local:**
-    *   Clone este repositório.
-    *   Atualize o arquivo `firebase-init.js` com as credenciais do seu projeto Firebase:
-        ```javascript
-        // firebase-init.js
-        const firebaseConfig = {
-          apiKey: "SUA_API_KEY",
-          authDomain: "SEU_AUTH_DOMAIN",
-          projectId: "SEU_PROJECT_ID",
-          storageBucket: "SEU_STORAGE_BUCKET",
-          messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-          appId: "SEU_APP_ID",
-          measurementId: "SEU_MEASUREMENT_ID" // Opcional
-        };
-        firebase.initializeApp(firebaseConfig);
-        // ...
-        ```
+2.  **Backend (Servidor Seguro):**
+    - Desenvolvido em **Python** com o framework **FastAPI**.
+    - Hospedado na plataforma **Railway**.
+    - Expõe um endpoint seguro (`/gerar-esboco-seguro` ou similar) que recebe as solicitações do frontend.
+    - **Funções:**
+        - Valida o token de autenticação do usuário (Firebase Admin SDK).
+        - Interage com a API de IA para gerar o esboço.
+        - Retorna o conteúdo gerado para o frontend.
+    - Esta camada protege o acesso à API de IA, garantindo que apenas usuários autenticados possam usá-la.
 
-3.  **Servindo os Arquivos:**
-    *   Devido a restrições de segurança do navegador (CORS, módulos JS), você não pode simplesmente abrir os arquivos `*.html` diretamente (via `file:///`).
-    *   Use um servidor web local. Se você tem Python:
-        ```bash
-        # Navegue até a pasta raiz do projeto no terminal
-        python -m http.server
-        ```
-        Ou, com Node.js e `npx` (vem com npm 5.2+):
-        ```bash
-        # Navegue até a pasta raiz do projeto no terminal
-        npx serve
-        ```
-    *   Acesse `http://localhost:8000` (ou a porta indicada) no seu navegador. Comece pela `home.html` ou `login.html`.
+3.  **Firebase (Backend-as-a-Service):**
+    - **Authentication:** Gerencia todo o ciclo de vida do usuário (cadastro, login, sessões).
+    - **Firestore:** Banco de dados NoSQL utilizado para armazenar:
+        - `usuarios`: Informações de perfil, como nome e status de administrador.
+        - `esbocos`: Histórico de todos os esboços gerados por cada usuário.
+        - `notificacoes`: Mensagens enviadas pelo painel admin.
+    - **Security Rules:** Regras de segurança robustas garantem que os usuários só possam ler e escrever seus próprios dados, protegendo a integridade da aplicação.
 
-4.  **API Backend (Dependência Externa):**
-    *   A funcionalidade de geração de esboços em `script.js` faz uma requisição para a `API_URL` (atualmente `http://localhost:5678/webhook-test/...`).
-    *   **Importante:** Para que a geração de conteúdo funcione, você precisará ter um serviço backend rodando nesta URL que receba um POST com os dados do formulário e retorne um JSON no formato esperado (ex: `{ "output": "Conteúdo do esboço..." }`).
-    *   Sem este backend, a interface do usuário funcionará, mas a geração de conteúdo do esboço falhará.
+## 💻 Tecnologias Utilizadas
 
-## ⚙️ Configurações Importantes
+- **Frontend:** HTML, CSS, JavaScript
+- **Backend:** Python 3, FastAPI, Uvicorn
+- **Banco de Dados e Autenticação:** Google Firebase (Authentication, Firestore)
+- **Hospedagem:**
+    - Frontend: Pode ser hospedado em qualquer serviço de site estático (Firebase Hosting, Netlify, Vercel).
+    - Backend: Railway (para o serviço Python/FastAPI).
+- **Gerenciamento de Dependências (Backend):** Poetry
 
-### Firebase (`firebase-init.js`)
-Este arquivo é crucial. Ele contém o objeto `firebaseConfig` com as chaves e IDs do seu projeto Firebase. Substitua os valores de exemplo pelos do seu projeto para que a autenticação e o banco de dados funcionem.
+## 🛠️ Como Configurar e Executar
 
-### API Endpoint (`script.js`)
-A constante `API_URL` em `script.js` define para onde as solicitações de geração de esboço são enviadas.
-```javascript
-const API_URL = 'http://localhost:5678/webhook-test/fd061969-eb2c-4355-89da-910ec299d4ef'; // AJUSTE ESTA URL
-```
-Você **deve** ajustar esta URL para o endpoint do seu serviço de backend que processa os pedidos de esboço.
+### Pré-requisitos
+- Node.js (para ferramentas de desenvolvimento, se necessário)
+- Python 3.8+
+- Conta no Google Firebase
+- Conta na Railway (ou outra plataforma de hospedagem de backend)
 
-### Índice do Firestore Necessário
-Para que o histórico de esboços funcione corretamente e ordenado por data, é **essencial** criar o seguinte índice composto no seu Cloud Firestore:
--   **Coleção:** `esbocos`
--   **Campos para indexar:**
-    1.  `uid` (Ascendente)
-    2.  `criadoEm` (Descendente)
--   **Escopo da Consulta:** Coleta
+### 1. Configuração do Firebase
+1.  Crie um novo projeto no [console do Firebase](https://console.firebase.google.com/).
+2.  Ative os serviços de **Authentication** (com o provedor de Email/Senha) e **Firestore**.
+3.  Vá para as **Configurações do Projeto** > **Geral** e, na seção "Seus apps", crie um novo aplicativo da Web.
+4.  Copie o objeto de configuração do Firebase e cole-o no arquivo `firebase-init.js`.
+5.  **Regras de Segurança:** Copie o conteúdo de `firestore-rules.txt` e cole nas regras do Firestore para proteger o banco de dados.
+6.  **Índices:** Crie os índices do Firestore conforme especificado em `INDICE_FIRESTORE.md` para permitir as consultas complexas (ex: ordenação do histórico).
 
-*Como criar:* No console do Firebase > Firestore Database > Índices > Criar índice. O Firebase pode inclusive fornecer um link direto no console de erros do navegador se o índice estiver faltando durante a execução da query.
+### 2. Configuração do Frontend
+1.  Abra os arquivos HTML (`index.html`, `login.html`, etc.) em um navegador. Para uma melhor experiência e para evitar problemas com CORS, sirva os arquivos com um servidor local (como o `Live Server` do VS Code).
+2.  Certifique-se de que o `API_URL` no arquivo `script.js` aponta para a URL do seu backend implantado na Railway.
+                                                                                                                                                                                                                                                                                                                                                            
+### 3. Configuração do Backend
+1.  **Chave de Serviço do Firebase:**
+    - No console do Firebase, vá para **Configurações do Projeto** > **Contas de serviço**.
+    - Clique em "Gerar nova chave privada" para baixar um arquivo JSON com as credenciais.
+2.  **Implantação na Railway:**
+    - Crie um novo projeto na Railway a partir de um repositório Git.
+    - Adicione as seguintes variáveis de ambiente no seu projeto Railway:
+        - `FIREBASE_CREDENTIALS_JSON`: Cole o **conteúdo completo** do arquivo JSON da chave de serviço que você baixou.
+        - `PORT`: A Railway define esta variável automaticamente, então garanta que seu `main.py` use `os.getenv("PORT")`.
+3.  O arquivo `nixpacks.toml` e `pyproject.toml` na pasta `backend/` instruirão a Railway sobre como instalar as dependências (FastAPI, Firebase Admin) e iniciar o servidor.
 
-### Regras de Segurança do Firestore (Sugeridas)
-No console do Firebase (Firestore Database > Regras), configure regras para proteger seus dados. Um exemplo básico:
-```firestore-rules
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Usuários: só podem ler e atualizar seus próprios dados.
-    // Criação permitida se o UID do documento for o mesmo do usuário autenticado.
-    match /usuarios/{userId} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId && request.resource.data.uid == request.auth.uid;
-    }
-    // Esboços: só podem ser criados, lidos, atualizados e deletados pelo dono (UID correspondente).
-    match /esbocos/{esbocoId} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.uid;
-      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
-    }
-  }
-}
-```
-**Atenção:** Estas são regras básicas. Adapte-as e teste-as conforme a necessidade do seu projeto, especialmente se precisar de validações de dados mais complexas.
-
-## 🖥️ Layout da Aplicação
-
--   **`home.html`**: A página de entrada do projeto. Apresenta uma visão geral das funcionalidades e links para `login.html` e `cadastro.html`.
--   **`login.html`**: Permite que usuários já cadastrados acessem a plataforma.
--   **`cadastro.html`**: Formulário para novos usuários criarem suas contas.
--   **`index.html`**: O coração da aplicação. Acessível apenas por usuários autenticados. Contém:
-    -   Uma **sidebar** para navegação, exibição de informações do usuário, lista de histórico de esboços e botão de logout.
-    -   A seção principal com o **formulário** para configurar e solicitar a geração de um novo esboço.
-    -   Uma área para exibir o **resultado** do esboço gerado, com opções de copiar e baixar.
-    -   Indicadores de **loading** e mensagens de **erro/sucesso**.
-
-## 📜 Scripts Principais
-
--   **`firebase-init.js`**:
-    -   Contém o objeto de configuração do Firebase (`firebaseConfig`).
-    -   Inicializa os serviços do Firebase (Authentication e Firestore), disponibilizando as instâncias `auth` e `db` globalmente para os outros scripts.
--   **`auth.js`**:
-    -   Gerencia toda a lógica de autenticação para as páginas `login.html` e `cadastro.html`.
-    -   **Login:** Trata do `signInWithEmailAndPassword`, feedback ao usuário e redirecionamento para `index.html` em caso de sucesso.
-    -   **Cadastro:** Trata do `createUserWithEmailAndPassword`, atualização do perfil do usuário (`displayName`) e criação de um documento na coleção `usuarios` do Firestore com os dados do novo usuário. Também fornece feedback e redireciona.
--   **`script.js`**:
-    -   É o motor da página `index.html`.
-    -   Verifica o estado de autenticação do usuário ao carregar a página; redireciona para `login.html` se não estiver logado.
-    -   Carrega e exibe os dados do usuário logado e o histórico de esboços (buscando do Firestore) na sidebar.
-    -   Controla a abertura/fechamento da sidebar e a função de logout.
-    -   Gerencia o formulário de geração de esboço: coleta os dados, valida, exibe estado de loading.
-    -   Envia a requisição (via `fetch`) para a `API_URL` externa com os dados do formulário.
-    -   Processa a resposta da API: exibe o esboço gerado na área de resultados.
-    -   Salva uma cópia do esboço gerado (junto com os parâmetros de entrada) na coleção `esbocos` do Firestore.
-    -   Implementa as funcionalidades "Copiar Texto" e "Baixar como Word".
-    -   Exibe notificações e mensagens de erro.
-
-## 🎨 Estilização (CSS)
-
--   **`style.css`**:
-    -   Define estilos globais, variáveis CSS (cores, sombras, gradientes, etc.) e a aparência base do `body`.
-    -   Estiliza os principais componentes da `index.html`: layout geral, header, sidebar, formulário de geração, seção de resultados, rodapé, e elementos de feedback como loading e notificações.
-    -   Inclui media queries para responsividade.
--   **`auth.css`**:
-    -   Estilos específicos para as páginas `login.html` e `cadastro.html`.
-    -   Focado no container centralizado, campos de formulário, botões e mensagens de feedback para o processo de autenticação.
--   **`home.css`**:
-    -   Estilos dedicados à landing page (`home.html`).
-    -   Define a aparência do header, seção de apresentação de funcionalidades e rodapé da página inicial.
--   **`utils.css`**:
-    -   Contém classes CSS utilitárias, como `.visually-hidden` para melhorar a acessibilidade ocultando elementos visualmente mas mantendo-os para leitores de tela.
-
-## 💡 Pontos de Melhoria Futuros (Sugestões)
-
--   Implementar um backend real e robusto para a `API_URL` (ex: usando Cloud Functions, Node.js/Express, Python/Flask, etc.).
--   Adicionar paginação ou scroll infinito para o histórico de esboços se o volume crescer muito.
--   Implementar as funcionalidades "Em breve" nos tipos de discurso.
--   Permitir edição de esboços salvos.
--   Adicionar temas de interface personalizáveis.
--   Melhorar o tratamento de erros da API de geração de esboços, com mensagens mais específicas.
--   Considerar a implementação de um Progressive Web App (PWA) para funcionalidades offline básicas.
-
-## 🐛 Problemas Conhecidos (do README anterior)
-
--   *Atualização do Nome do Usuário:* Após o cadastro, o nome do usuário na sidebar do `index.html` pode não atualizar imediatamente, exigindo um recarregamento manual da página. (Verificar se ainda persiste e, se sim, investigar `onAuthStateChanged` e `updateProfile`.)
--   *Dependência de API Externa:* A geração de conteúdo do esboço depende criticamente de um serviço funcional na `API_URL`. Sem ele, a funcionalidade principal de geração fica inoperante.
-
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Siga os passos:
-
-1.  Faça um fork do projeto.
-2.  Crie uma branch para sua funcionalidade (`git checkout -b feature/MinhaNovaFeature`).
-3.  Faça commit de suas mudanças (`git commit -m 'feat: Adiciona MinhaNovaFeature'`).
-4.  Faça push para a branch (`git push origin feature/MinhaNovaFeature`).
-5.  Abra um Pull Request.
-
-## 📄 Licença
-
-Este projeto é distribuído sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes (se houver um, caso contrário, pode-se adicionar um arquivo `LICENSE` com o texto da licença MIT).
-
-## 👨‍💻 Autor Original (Base do Projeto)
-
-Pablus Vinii
-GitHub: [@PablusVinii](https://github.com/PablusVinii)
+Com tudo configurado, a aplicação estará pronta para uso. Novos usuários podem se cadastrar, e você pode definir um usuário como administrador diretamente no banco de dados do Firestore, alterando o campo `admin` para `true` no documento do usuário correspondente na coleção `usuarios`.
