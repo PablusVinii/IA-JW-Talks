@@ -395,7 +395,7 @@ class GeradorEsboco {
             if (elementos.userInfo) {
                 elementos.userInfo.textContent = `👤 Usuário: ${nomeUsuario}`;
             }
-
+            
             const userDoc = await db.collection("usuarios").doc(user.uid).get();
             if (userDoc.exists) {
                 const userData = userDoc.data();
@@ -962,9 +962,9 @@ class GeradorEsboco {
     async carregarNotificacoes(uid) {
         const notificacoesList = document.getElementById('notificacoesList');
         if (!notificacoesList) return;
-    
+        
         notificacoesList.innerHTML = '<li style="color:#666;font-style:italic;">Carregando notificações...</li>';
-    
+        
         try {
             // Unsubscribe de listeners anteriores para evitar duplicação
             if (this.unsubscribeNotificacoes) {
@@ -977,84 +977,84 @@ class GeradorEsboco {
                     
                     const snapshotGerais = await db.collection("notificacoes").where("geral", "==", true).get();
                     
-                    const todasNotificacoes = [];
+            const todasNotificacoes = [];
                     snapshotEspecificas.docs.forEach(doc => todasNotificacoes.push({ id: doc.id, ...doc.data() }));
-                    snapshotGerais.docs.forEach(doc => {
+            snapshotGerais.docs.forEach(doc => {
                         // Evita duplicatas se uma notificação for geral e específica
                         if (!todasNotificacoes.some(n => n.id === doc.id)) {
-                            todasNotificacoes.push({ id: doc.id, ...doc.data() });
-                        }
-                    });
+                    todasNotificacoes.push({ id: doc.id, ...doc.data() });
+                }
+            });
 
-                    if (todasNotificacoes.length === 0) {
-                        notificacoesList.innerHTML = '<li style="color:#666;font-style:italic;">Nenhuma notificação</li>';
-                        this.atualizarContadorNotificacoes(0);
-                        return;
-                    }
+            if (todasNotificacoes.length === 0) {
+                notificacoesList.innerHTML = '<li style="color:#666;font-style:italic;">Nenhuma notificação</li>';
+                this.atualizarContadorNotificacoes(0);
+                return;
+            }
 
                     // Ordena por data, mais recente primeiro
                     todasNotificacoes.sort((a, b) => (b.data?.toDate() || 0) - (a.data?.toDate() || 0));
-    
-                    notificacoesList.innerHTML = '';
-                    let naoLidas = 0;
-    
+
+            notificacoesList.innerHTML = '';
+            let naoLidas = 0;
+
                     todasNotificacoes.forEach(data => {
                         if (!data.lida) naoLidas++;
-                        
-                        const li = document.createElement('li');
-                        li.style.cssText = `
-                            padding: 12px;
-                            margin: 8px 0;
-                            border-radius: 8px;
-                            background: ${data.lida ? '#f8fa' : '#e3f2fd'};
-                            border-left: 4px solid ${data.lida ? '#6c757d' : '#007bff'};
-                            cursor: pointer;
-                            transition: all 0.2s;
-                            position: relative;
-                        `;
+                
+                const li = document.createElement('li');
+                li.style.cssText = `
+                    padding: 12px;
+                    margin: 8px 0;
+                    border-radius: 8px;
+                    background: ${data.lida ? '#f8fa' : '#e3f2fd'};
+                    border-left: 4px solid ${data.lida ? '#6c757d' : '#007bff'};
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    position: relative;
+                `;
 
-                        const indicadorGeral = data.geral ? '<span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:10px;font-size:10px;margin-left:5px;">GERAL</span>' : '';
+                const indicadorGeral = data.geral ? '<span style="background:#ff6b6b;color:white;padding:2px 6px;border-radius:10px;font-size:10px;margin-left:5px;">GERAL</span>' : '';
 
-                        li.innerHTML = `
-                            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                                <div style="flex:1;">
-                                    <div style="font-weight:600;color:#333;margin-bottom:4px;">
-                                        ${data.titulo || 'Sem título'}
-                                        ${indicadorGeral}
-                                    </div>
-                                    <div style="font-size:0.9em;color:#666;margin-bottom:4px;">${data.mensagem || 'Sem mensagem'}</div>
-                                    <div style="font-size:0.8em;color:#666;">${data.data?.toDate ? data.data.toDate().toLocaleString('pt-BR') : 'Data não disponível'}
-                                        ${data.geral && data.totalDestinatarios ? ` | Para ${data.totalDestinatarios} usuários` : ''}
-                                    </div>
-                                </div>
-                                ${!data.lida ? '<span style="background:#ff4757;color:white;padding:2px 6px;border-radius:10px;font-size:10px;">NOVA</span>' : ''}
+                li.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div style="flex:1;">
+                            <div style="font-weight:600;color:#333;margin-bottom:4px;">
+                                ${data.titulo || 'Sem título'}
+                                ${indicadorGeral}
                             </div>
-                        `;
-                        
-                        li.addEventListener('click', () => {
+                            <div style="font-size:0.9em;color:#666;margin-bottom:4px;">${data.mensagem || 'Sem mensagem'}</div>
+                            <div style="font-size:0.8em;color:#666;">${data.data?.toDate ? data.data.toDate().toLocaleString('pt-BR') : 'Data não disponível'}
+                                ${data.geral && data.totalDestinatarios ? ` | Para ${data.totalDestinatarios} usuários` : ''}
+                            </div>
+                        </div>
+                        ${!data.lida ? '<span style="background:#ff4757;color:white;padding:2px 6px;border-radius:10px;font-size:10px;">NOVA</span>' : ''}
+                    </div>
+                `;
+
+                li.addEventListener('click', () => {
                             this.marcarNotificacaoComoLida(data.id, data);
-                            this.mostrarDetalhesNotificacao(data);
-                        });
+                    this.mostrarDetalhesNotificacao(data);
+                });
 
-                        li.addEventListener('mouseenter', () => {
-                            li.style.transform = 'translateX(5px)';
-                            li.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                        });
+                li.addEventListener('mouseenter', () => {
+                    li.style.transform = 'translateX(5px)';
+                    li.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                });
 
-                        li.addEventListener('mouseleave', () => {
-                            li.style.transform = 'translateX(0)';
-                            li.style.boxShadow = 'none';
-                        });
+                li.addEventListener('mouseleave', () => {
+                    li.style.transform = 'translateX(0)';
+                    li.style.boxShadow = 'none';
+                });
 
-                        notificacoesList.appendChild(li);
-                    });
-    
-                    this.atualizarContadorNotificacoes(naoLidas);
+                notificacoesList.appendChild(li);
+            });
+
+            this.atualizarContadorNotificacoes(naoLidas);
                 }, (error) => {
                     console.error("Erro no listener de notificações:", error);
                     notificacoesList.innerHTML = '<li style="color:red;">Erro ao carregar notificações.</li>';
                 });
-    
+
         } catch (error) {
             console.error("Erro ao configurar listener de notificações:", error);
             notificacoesList.innerHTML = '<li style="color:red;">Erro fatal ao carregar notificações.</li>';

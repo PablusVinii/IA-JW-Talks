@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migração de Dados</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); text-align: center; max-width: 500px; }
+        h1 { color: #3d5afe; }
+        p { color: #424242; line-height: 1.6; }
+        .btn { background-color: #2979ff; color: white; padding: 15px 30px; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; transition: background-color 0.3s; }
+        .btn:hover { background-color: #3d5afe; }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        #status { margin-top: 20px; font-weight: 600; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Atualização de Esboços Antigos</h1>
+        <p>
+            Esta é uma ferramenta de uso único para garantir que todos os seus esboços criados anteriormente apareçam na sua "Caixa de Entrada".
+        </p>
+        <p>
+            Clique no botão abaixo para iniciar o processo. Isso pode levar alguns minutos dependendo da quantidade de esboços.
+        </p>
+        <button id="btnMigrar" class="btn" onclick="iniciarMigracao()">Iniciar Atualização</button>
+        <div id="status"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script>
+        async function iniciarMigracao() {
+            const btn = document.getElementById('btnMigrar');
+            const statusDiv = document.getElementById('status');
+            btn.disabled = true;
+            statusDiv.textContent = 'Verificando autenticação...';
+
+            firebase.auth().onAuthStateChanged(async (user) => {
+                if (!user) {
+                    statusDiv.textContent = 'Erro: Você precisa estar logado para executar esta ação.';
+                    btn.disabled = false;
+                    return;
+                }
+
+                statusDiv.textContent = 'Buscando esboços antigos...';
+                
+                try {
+                    const esbocosRef = db.collection('esbocos');
+                    const snapshot = await esbocosRef.get();
+                    
+                    if (snapshot.empty) {
+                        statusDiv.textContent = 'Nenhum esboço encontrado para migrar.';
+                        return;
+                    }
+
+                    const batch = db.batch();
+                    let atualizacoes = 0;
+                    
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        // Verifica se o campo 'pasta' não existe ou está nulo
+                        if (data.pasta === undefined || data.pasta === null) {
+                            batch.update(doc.ref, { 
+                                pasta: 'Caixa de Entrada',
+                                tags: data.tags || [] // Garante que o campo tags exista
+                            });
+                            atualizacoes++;
+                        }
+                    });
+
+                    if (atualizacoes > 0) {
+                        statusDiv.textContent = `Encontrados ${atualizacoes} esboços. Atualizando...`;
+                        await batch.commit();
+                        statusDiv.textContent = `Sucesso! ${atualizacoes} esboços foram atualizados e movidos para a Caixa de Entrada.`;
+                    } else {
+                        statusDiv.textContent = 'Todos os seus esboços já estão atualizados. Nenhuma ação foi necessária.';
+                    }
+
+                } catch (error) {
+                    console.error("Erro na migração: ", error);
+                    statusDiv.textContent = 'Ocorreu um erro durante a migração. Verifique o console para mais detalhes.';
+                    btn.disabled = false;
+                }
+            });
+        }
+    </script>
+</body>
+</html> 
